@@ -43,6 +43,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
@@ -413,16 +414,15 @@ public class ImageUpload extends MyBaseActivity {
         }
     }
 
-
     protected void Upload_Server() {
-        // TODO Auto-generated method stub
         LogUtils.i("After call progress");
+        HttpURLConnection connection = null;
+        DataOutputStream outputStream = null;
+        FileInputStream fileInputStream = null;
+        DataInputStream inputStream1 = null;
         try {
 
             Log.e("Image Upload", "Inside Upload");
-
-            HttpURLConnection connection;
-            DataOutputStream outputStream;
 
             String pathToOurFile = picturePath;
             //	  String pathToOurFile1 = imagepathcam;
@@ -440,7 +440,7 @@ public class ImageUpload extends MyBaseActivity {
             byte[] buffer;
             int maxBufferSize = 1024 * 1024;
 
-            FileInputStream fileInputStream = new FileInputStream(new File(pathToOurFile));
+            fileInputStream = new FileInputStream(new File(pathToOurFile));
             //  FileInputStream fileInputStream1 = new FileInputStream(new File(pathToOurFile1));
 
             URL url = new URL(urlServer);
@@ -483,14 +483,8 @@ public class ImageUpload extends MyBaseActivity {
             // Responses from the server (code and message)
             String serverResponseMessage = connection.getResponseMessage();
 
-
             LogUtils.i("image" + serverResponseMessage);
 
-            fileInputStream.close();
-            outputStream.flush();
-            outputStream.close();
-
-            DataInputStream inputStream1;
             inputStream1 = new DataInputStream(connection.getInputStream());
             String str;
             String Str1_imageurl = "";
@@ -501,7 +495,6 @@ public class ImageUpload extends MyBaseActivity {
                 Str1_imageurl = str;
                 Log.e("Debug", "Server Response String imageurl" + str);
             }
-            inputStream1.close();
             LogUtils.i("image url" + Str1_imageurl);
 
             //get the image url and store
@@ -514,8 +507,37 @@ public class ImageUpload extends MyBaseActivity {
 
             LogUtils.i("Profile Picture Path" + profImage);
         } catch (Exception e) {
-
             e.printStackTrace();
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
+            if (fileInputStream != null) {
+                try {
+                    fileInputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (fileInputStream != null) {
+                try {
+                    outputStream.flush();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    outputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (inputStream1 != null) {
+                try {
+                    inputStream1.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
