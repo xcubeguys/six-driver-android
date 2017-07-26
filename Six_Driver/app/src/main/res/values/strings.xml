@@ -43,6 +43,7 @@
     <string name="you_are_now_offline">You are now offline</string>
     <string name="proof_not_accept">Your proof status is pending</string>
     <string name="proof_rejected">Your proof status is Rejected</string>
+    <string name="blocked_by_admin">You have been blocked by Admin</string>
     <string name="go_offline">GO OFFLINE</string>
     <string name="not_now">Not now</string>
 

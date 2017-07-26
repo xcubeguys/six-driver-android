@@ -2884,7 +2884,8 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
 
                                 //online_method();
                                 //goOnlineFB();
-                                setonline("1", String.valueOf(0));
+                                //setonline("1", String.valueOf(0));
+                                getBlockedStatus();
                             } else if (proofstatus.matches("Rejected")) {
 
                                 showdialog((getResources().getString(R.string.proof_rejected)));
@@ -2898,6 +2899,50 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
                     } else {
 
                         saveInFirebase();
+                    }
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                    LogUtils.i("error==>" + String.valueOf(databaseError));
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void getBlockedStatus() {
+        try {
+            LogUtils.i("Driver Id In Blocked" + driverId);
+            proofstatusref = FirebaseDatabase.getInstance().getReference().child("drivers_data").child(driverId).child("block_status");
+            proofstatusref.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.getValue() != null) {
+                        String blockStatus = dataSnapshot.getValue().toString();
+                        LogUtils.i("Driver blockStatus " + blockStatus);
+                        if (!blockStatus.isEmpty() && blockStatus.length() != 0) {
+                            if (blockStatus.matches("0")) {
+
+                                //online_method();
+                                //goOnlineFB();
+                                setonline("1", String.valueOf(0));
+                            } else if (blockStatus.matches("1")) {
+
+                                showdialog((getResources().getString(R.string.blocked_by_admin)));
+                                //gotooffline();
+                            } else {
+
+                                showdialog(getResources().getString(R.string.blocked_by_admin));
+                                //gotooffline();
+                            }
+                        } else {
+                            setonline("1", String.valueOf(0));
+                        }
+                    } else {
+                        setonline("1", String.valueOf(0));
                     }
                 }
 
