@@ -4,8 +4,9 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
 import android.provider.ContactsContract;
-import android.util.Log;
 import android.widget.Toast;
+
+import com.tommy.driver.utils.LogUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +28,7 @@ public class DatabaseAdapter {
         getPhoneNumber = context.getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, null, null, ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC");
 
         if (getPhoneNumber != null) {
-            Log.e("count", "" + getPhoneNumber.getCount());
+            LogUtils.e("count " + getPhoneNumber.getCount());
             if (getPhoneNumber.getCount() == 0) {
                 Toast.makeText(context, "No contacts in your contact list.", Toast.LENGTH_LONG).show();
             }
@@ -48,7 +49,7 @@ public class DatabaseAdapter {
                 data.add(selectUser);
             }
         } else {
-            Log.e("Cursor close 1", "----");
+            LogUtils.e("Cursor close 1 " + "----");
         }
 
         getPhoneNumber.close();

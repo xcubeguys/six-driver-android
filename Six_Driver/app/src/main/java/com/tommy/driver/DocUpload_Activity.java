@@ -21,7 +21,6 @@ import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.util.Base64;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -45,7 +44,6 @@ import com.android.volley.Response;
 import com.android.volley.ServerError;
 import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
-import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.bumptech.glide.Glide;
 import com.google.firebase.database.DatabaseError;
@@ -87,10 +85,9 @@ import java.util.Map;
 @EActivity(R.layout.activity_upload_doc)
 public class DocUpload_Activity extends MyBaseActivity implements Validator.ValidationListener {
 
-    Uri mCapturedImageURI;
     private static final int CAMERA_REQUEST = 95;
     private static final int GALLERY_REQUEST = 96;
-
+    Uri mCapturedImageURI;
     /**
      * 0 - driver license front
      * 1 - driver license back
@@ -111,59 +108,32 @@ public class DocUpload_Activity extends MyBaseActivity implements Validator.Vali
 
     String driverID, driverFirstName, driverLastName, driverNickName, driverEmail, driverMobile, strCarCategory, strNumOfPassenger, referralStatus;
     JSONObject strJsonCategory;
-
-    @Click(R.id.back)
-    void getback() {
-        finish();
-    }
-
-
     @ViewById(R.id.termsandconditions)
     CheckBox tandc;
-
     @NotEmpty(message = "")
     @Length(min = 1, message = "Enter number of passengers")
     @ViewById(R.id.numberofpass)
     EditText numberofpass;
-
-    @CheckedChange(R.id.termsandconditions)
-    public void terms(boolean isChecked) {
-        if (isChecked) {
-            getTermsCondition();
-            showTermsDialog();
-        } else {
-            if (dialog != null)
-                dialog.dismiss();
-        }
-    }
-
     @NotEmpty(message = "Enter Vehicle License Plate Number")
     @ViewById(R.id.vehicle_numberplate)
     EditText editVehiclenumberplate;
-
     @NotEmpty(message = "Enter Vehicle Make")
     @ViewById(R.id.vehicle_make)
     EditText edtVehicleMake;
-
     @NotEmpty(message = "Enter Vehicle Model")
     @ViewById(R.id.vehicle_model)
     EditText edtVehicleModel;
-
     @NotEmpty(message = "Enter Vehicle Year")
     @ViewById(R.id.vehicle_year)
     EditText edtVehicleYear;
-
     @NotEmpty(message = "Enter Vehicle Mileage")
     @ViewById(R.id.vehicle_mileage)
     EditText edtVehicleMileage;
-
     @ViewById(R.id.input_Referral_code)
     EditText edtReferralcode;
     String strEmail, strFirstName, strLastName, strNickName, strPassword, strCity, strMobile, strCountyCode, strProfileImage, strComingfrom, strFBID, strGoogleID, strSelectedCategory;
-
     Validator validator;
     Spinner spinnerCategory;
-
     /**
      * 0 - driver license front
      * 1 - driver license back
@@ -176,7 +146,6 @@ public class DocUpload_Activity extends MyBaseActivity implements Validator.Vali
      * 8 - private hire
      */
     private String uploadedImageUrls[];
-
     /**
      * 0 - driver license front
      * 1 - driver license back
@@ -189,6 +158,22 @@ public class DocUpload_Activity extends MyBaseActivity implements Validator.Vali
      * 8 - private hire
      */
     private ImageView documentsImageViews[];
+
+    @Click(R.id.back)
+    void getback() {
+        finish();
+    }
+
+    @CheckedChange(R.id.termsandconditions)
+    public void terms(boolean isChecked) {
+        if (isChecked) {
+            getTermsCondition();
+            showTermsDialog();
+        } else {
+            if (dialog != null)
+                dialog.dismiss();
+        }
+    }
 
     private void initializeViewsOfUploadImages() {
         RelativeLayout driverLicenseRl = (RelativeLayout) findViewById(R.id.driver_license_ll);
@@ -408,7 +393,7 @@ public class DocUpload_Activity extends MyBaseActivity implements Validator.Vali
                             try {
                                 strJsonCategory = response.getJSONObject(i);
                                 strCarCategory = strJsonCategory.getString("categoryname");
-                                Log.d("OUTPUT IS", strCarCategory);
+                                LogUtils.d("OUTPUT IS " + strCarCategory);
                                 carcategory[0] = "Select car category";
                                 carcategory[i + 1] = strCarCategory;
                                 LogUtils.i("CATEGORY" + carcategory[i]);
@@ -538,7 +523,7 @@ public class DocUpload_Activity extends MyBaseActivity implements Validator.Vali
                     // stopAnim();
                     Toast.makeText(DocUpload_Activity.this, "No Internet. Please Connect.", Toast.LENGTH_SHORT).show();
                 }
-                VolleyLog.d("DOCUMENT ACTIVITY", "Error: " + error.getMessage());
+                LogUtils.d("Error: " + error.getMessage());
             }
         });
 
@@ -638,7 +623,7 @@ public class DocUpload_Activity extends MyBaseActivity implements Validator.Vali
                     // stopAnim();
                     Toast.makeText(DocUpload_Activity.this, "No Internet. Please Connect.", Toast.LENGTH_SHORT).show();
                 }
-                VolleyLog.d("DOCUMENT ACTIVITY", "Error: " + error.getMessage());
+                LogUtils.d("Error: " + error.getMessage());
             }
         });
 
@@ -734,7 +719,7 @@ public class DocUpload_Activity extends MyBaseActivity implements Validator.Vali
                     // stopAnim();
                     Toast.makeText(DocUpload_Activity.this, "No Internet. Please Connect.", Toast.LENGTH_SHORT).show();
                 }
-                VolleyLog.d("DOCUMENT ACTIVITY", "Error: " + error.getMessage());
+                LogUtils.d("Error: " + error.getMessage());
             }
         });
 
@@ -980,66 +965,12 @@ public class DocUpload_Activity extends MyBaseActivity implements Validator.Vali
         }
     }
 
-    private class ImageUploadTask extends AsyncTask<String, Void, Boolean> {
-
-        private ProgressDialog dialog;
-
-        ImageUploadTask(DocUpload_Activity activity) {
-            context = activity;
-            dialog = new ProgressDialog(context);
-        }
-
-        private Context context;
-
-        protected void onPreExecute() {
-
-            dialog = new ProgressDialog(context);
-            dialog.setMessage("Uploading...");
-            dialog.setIndeterminate(false);
-            dialog.setCancelable(false);
-            dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            dialog.show();
-        }
-
-        @Override
-        protected void onPostExecute(final Boolean success) {
-
-            if (!success) {
-                documentsImageViews[photoPickIdentificationId].setImageBitmap(null);
-                AlertDialog.Builder builder = new AlertDialog.Builder(DocUpload_Activity.this, R.style.AppCompatAlertDialogStyle);
-                builder.setMessage("Failed to upload image. Please try again.");
-                builder.setPositiveButton(getString(R.string.ok), null);
-                builder.show();
-            }
-
-            if (dialog != null && dialog.isShowing()) {
-                if (!isFinishing() && !isDestroyed()) {
-                    try {
-                        dialog.dismiss();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-
-        @Override
-        protected Boolean doInBackground(final String... args) {
-            try {
-                return Upload_Server();
-            } catch (Exception e) {
-                Log.e("Schedule", "UpdateSchedule failed", e);
-                return false;
-            }
-        }
-    }
-
     protected boolean Upload_Server() {
 
         LogUtils.i("After call progress");
         try {
 
-            Log.e("Image Upload", "Inside Upload");
+            LogUtils.e("Image Upload " + "Inside Upload");
 
             HttpURLConnection connection;
             DataOutputStream outputStream;
@@ -1335,6 +1266,59 @@ public class DocUpload_Activity extends MyBaseActivity implements Validator.Vali
         LogUtils.i("File Path1:" + filePath);
         cursor.close();
         return filePath;
+    }
+
+    private class ImageUploadTask extends AsyncTask<String, Void, Boolean> {
+
+        private ProgressDialog dialog;
+        private Context context;
+
+        ImageUploadTask(DocUpload_Activity activity) {
+            context = activity;
+            dialog = new ProgressDialog(context);
+        }
+
+        protected void onPreExecute() {
+
+            dialog = new ProgressDialog(context);
+            dialog.setMessage("Uploading...");
+            dialog.setIndeterminate(false);
+            dialog.setCancelable(false);
+            dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            dialog.show();
+        }
+
+        @Override
+        protected void onPostExecute(final Boolean success) {
+
+            if (!success) {
+                documentsImageViews[photoPickIdentificationId].setImageBitmap(null);
+                AlertDialog.Builder builder = new AlertDialog.Builder(DocUpload_Activity.this, R.style.AppCompatAlertDialogStyle);
+                builder.setMessage("Failed to upload image. Please try again.");
+                builder.setPositiveButton(getString(R.string.ok), null);
+                builder.show();
+            }
+
+            if (dialog != null && dialog.isShowing()) {
+                if (!isFinishing() && !isDestroyed()) {
+                    try {
+                        dialog.dismiss();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+
+        @Override
+        protected Boolean doInBackground(final String... args) {
+            try {
+                return Upload_Server();
+            } catch (Exception e) {
+                LogUtils.e("Schedule " + "UpdateSchedule failed " + e);
+                return false;
+            }
+        }
     }
 
 }

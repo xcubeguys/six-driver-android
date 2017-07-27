@@ -23,13 +23,12 @@ import static android.support.v4.content.PermissionChecker.checkSelfPermission;
 
 public class GoogleLocationService {
 
-    private GoogleServicesCallbacks callbacks = new GoogleServicesCallbacks();
-    LocationUpdateListener locationUpdateListener;
-    Context activity;
+    public static final long UPDATE_INTERVAL_IN_MILLISECONDS = 30000;
     protected GoogleApiClient mGoogleApiClient;
     protected LocationRequest mLocationRequest;
-
-    public static final long UPDATE_INTERVAL_IN_MILLISECONDS = 30000;
+    LocationUpdateListener locationUpdateListener;
+    Context activity;
+    private GoogleServicesCallbacks callbacks = new GoogleServicesCallbacks();
 
 
     public GoogleLocationService(Context activity, LocationUpdateListener locationUpdateListener) {
@@ -38,8 +37,19 @@ public class GoogleLocationService {
         buildGoogleApiClient();
     }
 
+    private static boolean locationEnabled(Context context) {
+        boolean gps_enabled = false;
+        LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        try {
+            gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return gps_enabled;
+    }
+
     protected synchronized void buildGoogleApiClient() {
-        //Log.i(TAG, "Building GoogleApiClient");
+        //LogUtils.i("Building GoogleApiClient");
         mGoogleApiClient = new GoogleApiClient.Builder(activity)
                 .addConnectionCallbacks(callbacks)
                 .addOnConnectionFailedListener(callbacks)
@@ -56,49 +66,6 @@ public class GoogleLocationService {
 
     }
 
-    private class GoogleServicesCallbacks implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
-
-        @Override
-        public void onConnected(Bundle bundle) {
-            startLocationUpdates();
-        }
-
-        @Override
-        public void onConnectionSuspended(int i) {
-            mGoogleApiClient.connect();
-        }
-
-        @Override
-        public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-
-            if (connectionResult.getErrorCode() == ConnectionResult.SERVICE_VERSION_UPDATE_REQUIRED) {
-                Toast.makeText(activity, "Google play service not updated", Toast.LENGTH_LONG).show();
-
-            }
-            locationUpdateListener.cannotReceiveLocationUpdates();
-        }
-
-        @Override
-        public void onLocationChanged(Location location) {
-            if (location.hasAccuracy()) {
-                if (location.getAccuracy() < 30) {
-                    locationUpdateListener.updateLocation(location);
-                }
-            }
-        }
-    }
-
-    private static boolean locationEnabled(Context context) {
-        boolean gps_enabled = false;
-        LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-        try {
-            gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return gps_enabled;
-    }
-
     private boolean servicesConnected(Context context) {
         return isPackageInstalled(GooglePlayServicesUtil.GOOGLE_PLAY_STORE_PACKAGE, context);
     }
@@ -113,7 +80,6 @@ public class GoogleLocationService {
             return false;
         }
     }
-
 
     public void startUpdates() {
     /*
@@ -162,6 +128,38 @@ public class GoogleLocationService {
 
     public void closeGoogleApi() {
         mGoogleApiClient.disconnect();
+    }
+
+    private class GoogleServicesCallbacks implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+
+        @Override
+        public void onConnected(Bundle bundle) {
+            startLocationUpdates();
+        }
+
+        @Override
+        public void onConnectionSuspended(int i) {
+            mGoogleApiClient.connect();
+        }
+
+        @Override
+        public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
+            if (connectionResult.getErrorCode() == ConnectionResult.SERVICE_VERSION_UPDATE_REQUIRED) {
+                Toast.makeText(activity, "Google play service not updated", Toast.LENGTH_LONG).show();
+
+            }
+            locationUpdateListener.cannotReceiveLocationUpdates();
+        }
+
+        @Override
+        public void onLocationChanged(Location location) {
+            if (location.hasAccuracy()) {
+                if (location.getAccuracy() < 30) {
+                    locationUpdateListener.updateLocation(location);
+                }
+            }
+        }
     }
 
 }

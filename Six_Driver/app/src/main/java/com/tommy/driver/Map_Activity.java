@@ -57,7 +57,6 @@ import android.text.Html;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -88,7 +87,6 @@ import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.NoConnectionError;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.androidadvance.topsnackbar.TSnackbar;
@@ -193,30 +191,41 @@ import static com.google.maps.android.PolyUtil.isLocationOnPath;
 public class Map_Activity extends AppCompatActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, LocationSource,
         GoogleApiClient.OnConnectionFailedListener, LocationListener, GeoQueryEventListener, ValueEventListener, DirectionCallback, View.OnClickListener, android.location.LocationListener {
 
-    private static final String TAG = "MapActivity";
-
-    private GoogleMap mMap;
-    GoogleApiClient mGoogleApiClient;
+    // Keys for storing activity state in the Bundle.
+    private static final int MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
+    private static final int CUSTOM_OVERLAY_PERMISSION_REQUEST_CODE = 101;
+    public static DatabaseReference canceltripreference;
+    public static boolean excecuteonce = false;
+    public static boolean excecutecancelonce = false;
+    static boolean distanceStatus;
+    static double distance = 0;
+    static long startTime, endTime;
+    static int p = 1;
+    static String sumofamount;
+    static DatabaseReference tollfeereference;
+    static boolean active = false;
+    static String strTotalDistance = "0";
+    //Smart location
+    final Handler handler = new Handler();
+    final Handler ttsHandler = new Handler();
+    public String riderFirstName, riderLastName, status, message, ridermobile, riderFirstNameService;
+    public Map<LatLng, Marker> tollMarkersMap;
+    public Map<LatLng, Marker> wayPaintsMarker;
+    public Map<Integer, Polyline> wayPaintsPolyline;
     protected LocationRequest mLocationRequest;
-
+    GoogleApiClient mGoogleApiClient;
     LocationService myService;
     String tripState, onlinecheck, ratingcheck = "null", previous_final_instruct = "";
-    static boolean distanceStatus;
     LocationManager locationManager;
     Location mCurrentLocation, lStart, lEnd;
-    static double distance = 0;
     double speed;
     Double routeLat, routeLng;
-    static long startTime, endTime;
     ImageView mute, volon;
-    static int p = 1;
     int previousToll = 0;
     double k, surgeaddamount;
     String strDistanceBegin, currentDateTimeString, endAddress, endLat, endLng;
     FlexibleRatingBar flexibleRatingBar;
     String ratingInt;
-    private OnLocationChangedListener mMapLocationListener = null;
-    static String sumofamount;
     String selectedDrawable;
     TextToSpeech textToSpeech;
     List<Step> step;
@@ -228,24 +237,13 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
     DatabaseReference requestReference;
     DatabaseReference tripReference, ridercanceltripreference;
     DatabaseReference proofstatusref;
-    static DatabaseReference tollfeereference;
     DatabaseReference faretoolreference;
     int waypointcount = 0;
-    //Smart location
-    final Handler handler = new Handler();
-    final Handler ttsHandler = new Handler();
     float previousBearing = 0;
-
     List<LatLng> latlngs;
-
-    public static DatabaseReference canceltripreference;
-
     int mapPosition = 0;
-    static boolean active = false;
     boolean haslatlng;
     String tempTripWithName, google_api_key;
-    // Keys for storing activity state in the Bundle.
-    private static final int MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     /**
      * The fastest rate for active location updates. Exact. Updates will never be more frequent
      * than this value.
@@ -254,100 +252,216 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
     SharedPreferences state, prefs;
     Dialog d, dialogTripSummary, dialog;
     RelativeLayout onlineLay, toolbarLayout;
-    public static boolean excecuteonce = false;
-    public static boolean excecutecancelonce = false;
     String driverId = null, drivername;
-    static String strTotalDistance = "0";
     FirebaseApp app;
     GeoFire geoFire;
     DatabaseReference ratingReference, ratingRef, checkAccepRef, checkTripCancelRef, rideridreference, droplocationRef,
             pickupTerminalRef, tripsdataRef, multidestref;
     ValueEventListener listener, tripListener, ratingListener, canceltripslistener, statusListener, droplocationlistener,
             pickupTerminalListen, tripsdataListen, multidestlis;
-    public String riderFirstName, riderLastName, status, message, ridermobile, riderFirstNameService;
     BottomBar bottomBar;
+    //EasyTimer audioTimer= new EasyTimer(3000);
     CardView navcard;
     EasyTimer easyTimer = new EasyTimer(2000);
-    //EasyTimer audioTimer= new EasyTimer(3000);
-
     RelativeLayout startTripLayout, arriveNowLayout, endTripLayout, destinationLayout;
     TextView onlineTxt, txtRiderName, txtRiderDestination, txtRiderName_Begin, txtEndTrip, toll_pay, navTxt;
+    // location accuracy settings
     Button btnArriveNow, btnEndTrip;
     TextView pickuploc, droploc, progeta, progDistance, progestfare;
-    // location accuracy settings
-
     Marker currentLocMarker, pickUPrDropMarker;
     Polyline routePolyline, mulPoly;
     LatLng destLocation, orginLocation, navigationLatLng;
-
     ImageButton riderinfo, riderinfoinarrived, riderinfoinarrived1;
-
     Button btnStartTrip;
     String reqID, tripID, strLat, strLng, tripIDWithName, pickLatLng;
     String strsetValue, tripStatus, strTotalPrice;
-
     RelativeLayout progressLayout1, progresslayout, FAB, routeNavigate;
     ProgressWheel pwOne;
     ImageView requestMapView;
     View mapView;
     String tollfee, totalprice;
     String riderID, strsetdestination, strRiderProfile, strCategory, strPickupAddress;
-
     ArrayList<String> tripIDs = new ArrayList<>();
     ArrayList<String> tollfrees = new ArrayList<>();
-
     HashMap<String, String> newMap = new HashMap<>();
-
-    /**
-     * ATTENTION: This was auto-generated to implement the App Indexing API.
-     * See https://g.co/AppIndexing/AndroidStudio for more information.
-     * rank list US Is india regnonized
-     */
-    private GoogleApiClient client;
     boolean doubleBackToExitPressedOnce = false;
     ProgressDialog progressDialog;
-
     String strWebprice_km, strwebpricepermin, strwebmaxsize, strwebpricefare, strCacnelStatus, strbookfee, strairportfee,
             strtaxpercentage, strDropPrice;
-
     TextView trip_rider_name, txtTotalDistance, txtTripAmount, txtTripdate, companyname, companyfee;
     ImageView imgRiderProfile;
-
     LinearLayout dynamic, dynamic1, dynamic2;
     TextView current_rider, current_rider1, current_rider2;
-
     BitmapDescriptor mapCarIcon;
     LatLng latLng, removingMarkerPoint;
-
     LatLng prevLatLng = new LatLng(0, 0);
-
-    private GoogleLocationService googleLocationService;
-
     MediaPlayer requstingTone = new MediaPlayer();
 
     String surgePrice, driverCompanyName, driverCompanyFee;
 
     Ringtone r;
     boolean volume = false;
-
-    public Map<LatLng, Marker> tollMarkersMap;
-
     JSONObject jsonTollObject = null;
-
-    private static final int CUSTOM_OVERLAY_PERMISSION_REQUEST_CODE = 101;
-
     Date startDate, endDate;
     long onlineDuration;
-
     int n = 5;//Total Category
     String[] strCategoryName = new String[n];
-
     ArrayList<LatLng> points = null;
-
-    public Map<LatLng, Marker> wayPaintsMarker;
-    public Map<Integer, Polyline> wayPaintsPolyline;
-
     int ERP_SKIP_COUNT = 0;
+    private GoogleMap mMap;
+    private OnLocationChangedListener mMapLocationListener = null;
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     * rank list US Is india regnonized
+     */
+    private GoogleApiClient client;
+    private GoogleLocationService googleLocationService;
+    private DatabaseReference keyRef;
+    private ValueEventListener tripRefValueEventListener = new ValueEventListener() {
+        @Override
+        public void onDataChange(DataSnapshot dataSnapshot) {
+            if (dataSnapshot.getValue() != null) {
+                if (!dataSnapshot.getValue().toString().equals("0")) {
+                    //tripID = dataSnapshot.getValue().toString();
+                    tripIDWithName = dataSnapshot.getValue().toString();
+                    LogUtils.i("THE TRIP ID FROM FBASE" + tripIDWithName);
+
+                    if (tripIDWithName.isEmpty() && tripIDWithName.length() == 0) {
+
+                        if (tripState.matches("btnendClicked")) {
+                        } else {
+                            showProgressDialog();
+                        }
+
+                    } else if (tripIDWithName.matches("empty") || tripIDWithName.equals("0")) {
+                        dismissProgressDialog();
+                    } else {
+                        //tripIDs.add("58b7a6bbda71b4437a8b4567"+":"+riderFirstName);
+                        //tripIDs.add("58b7a6e4da71b4817b8b4567"+":"+riderFirstName);
+
+                        //tripIDs.add("58ad92c3da71b47d5f8b4567"+":"+"name2");
+                        tripIDWithName = dataSnapshot.getValue().toString();
+                        String[] tripidArray = tripIDWithName.split(":");
+                        String Tripid = tripidArray[0];
+                        riderFirstName = tripidArray[1].replaceAll("%20", " ");
+
+                        tripID = Tripid;
+
+
+                        LogUtils.i("Trips List Firebase before" + tripIDs + "SIZE" + tripIDs.size());
+                        LogUtils.i("TripID Firebase" + tripID);
+                        LogUtils.i("TripID riderFirstName" + riderFirstNameService);
+                               /* if(riderFirstName==null || riderFirstName.isEmpty() || riderFirstName.equals("null"))
+                                {
+                                    LogUtils.i("Rider ID"+riderID);
+                                    if(riderID!=null){
+                                        getRiderName(riderID);
+                                    }
+                                    riderFirstName=riderFirstNameService;
+                                    LogUtils.i("Insiide Service" + riderFirstNameService);
+                                }*/
+
+                        if (tripIDs.size() == 0) {
+                            tripIDs.add(tripIDWithName);
+                                   /* Collections.reverse(tripIDs);*/
+                        } else {
+
+                            if (!tripIDs.contains(tripIDWithName)) {
+                                //if(!tripIDs.contains(tripID)){
+                                tripIDs.add(tripIDWithName);
+                                //Collections.reverse(tripIDs);
+
+                                LogUtils.i("trip id inside===>" + tripID);
+                                LogUtils.i("trip id inside===>" + riderFirstName);
+                                LogUtils.i("trip id inside===>" + tripIDs);
+                            } else {
+                                LogUtils.i("trip id outside===>" + tripID);
+                            }
+                        }
+                        LogUtils.i("Trips List Firebase after" + tripIDs);
+
+                        Set<String> hs = new LinkedHashSet<>();
+                        hs.addAll(tripIDs);
+                        tripIDs.clear();
+                        tripIDs.addAll(hs);
+                        LogUtils.i("before Trips List" + tripIDs);
+                                /*Collections.reverse(tripIDs);*/
+                        LogUtils.i("after Trips List" + tripIDs);
+
+                        //                        LogUtils.i("Trips List Firebase cleared" + tripIDs.get(0));
+
+                        newMap.put(riderFirstName, tripID);
+                        LogUtils.i("Trips List" + tripIDs);
+                        LogUtils.i("Trips List" + tripIDs.size());
+                        LogUtils.i("Trips hash map List" + newMap);
+
+                        createDistanceFireBase();
+
+                        saveArray(tripIDs, "tripidarray", getApplicationContext());
+
+                        if (!tripID.equals("empty")) {
+                            getState.putString("tripID", tripID);
+                            getState.apply();
+                        }
+
+                        getstatusfromfirebase(tripID);
+                        createRidersNameList();
+                        dismissProgressDialog();
+                    }
+                } else {
+                    dismissProgressDialog();
+                }
+
+            } else {
+                showProgressDialog();
+            }
+        }
+
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+
+        }
+    };
+
+    private static float getRotate(LatLng curPos, LatLng nextPos) {
+        double x1 = curPos.latitude;
+        double x2 = nextPos.latitude;
+        double y1 = curPos.longitude;
+        double y2 = nextPos.longitude;
+
+        return (float) (Math.atan2(y2 - y1, x2 - x1) / Math.PI * 180);
+    }
+
+    public static StateListDrawable selectorBackgroundColor(Context context
+            , int normal, int pressed) {
+        StateListDrawable states = new StateListDrawable();
+        states.addState(new int[]{android.R.attr.state_selected},
+                new ColorDrawable(pressed));
+        states.addState(new int[]{}, new ColorDrawable(normal));
+        return states;
+    }
+
+    // Convert a view to bitmap
+    public static Bitmap createDrawableFromView(Context context, View view, String markerCount) {
+
+        TextView markerCountTxt = (TextView) view.findViewById(R.id.num_txt);
+        markerCountTxt.setText(markerCount);
+
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        ((Activity) context).getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        view.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        view.measure(displayMetrics.widthPixels, displayMetrics.heightPixels);
+        view.layout(0, 0, displayMetrics.widthPixels, displayMetrics.heightPixels);
+        view.buildDrawingCache();
+
+        Bitmap bitmap = Bitmap.createBitmap(view.getMeasuredWidth(), view.getMeasuredHeight(), Bitmap.Config.ARGB_8888);
+
+        Canvas canvas = new Canvas(bitmap);
+        view.draw(canvas);
+
+        return bitmap;
+    }
 
     @SuppressLint("UseSparseArrays")
     @Override
@@ -1186,10 +1300,6 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
         dialog.show();
     }
 
-    public void setToll(String toll) {
-        this.tollfee = toll;
-    }
-
     public String getToll() {
         if (tollfee != null) {
             return tollfee;
@@ -1198,8 +1308,8 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    public void setTotalPrice(String price) {
-        this.totalprice = price;
+    public void setToll(String toll) {
+        this.tollfee = toll;
     }
 
     public String getTotalPrice() {
@@ -1208,6 +1318,10 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
         } else {
             return "0";
         }
+    }
+
+    public void setTotalPrice(String price) {
+        this.totalprice = price;
     }
 
     public void addTollAmount(String tollAmount) throws Exception {
@@ -1300,7 +1414,7 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
                     //
                     //    Toast.makeText(Map_Activity.this, "An unknown network error has occured", Toast.LENGTH_SHORT).show();
                 }
-                VolleyLog.d("Error", "MapActivity: " + error.getMessage());
+                LogUtils.d("MapActivity: " + error.getMessage());
             }
         });
 
@@ -1343,7 +1457,7 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
                     //
                     //    Toast.makeText(Map_Activity.this, "An unknown network error has occured", Toast.LENGTH_SHORT).show();
                 }
-                VolleyLog.d("Error", "MapActivity: " + error.getMessage());
+                LogUtils.d("MapActivity: " + error.getMessage());
             }
         });
 
@@ -1596,7 +1710,6 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
         dialog.show();
     }
 
-
     //showdialog when rider cancel the request
     private void showCancelDialog() {
         try {
@@ -1641,14 +1754,14 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
                 if (tripIDs.size() <= 1) {
                     getState.putString("tripstate", "endClicked");
                     getState.apply();
-                    Log.d(TAG, "Value is: " + status);
+                    LogUtils.d("Value is: " + status);
                     tripIDs.remove(status);
                     System.out.println(tripIDs + "Trip with Name  showCancelDialog ridercancel" + status);
                     easyTimer.stop();
                     Intent intent = new Intent(Map_Activity.this, Map_Activity.class);
                     startActivity(intent);
                 } else {
-                    Log.d(TAG, "Value is: " + status);
+                    LogUtils.d("Value is: " + status);
                     tripIDs.remove(status);
                     System.out.println(tripIDs + "Trip with Name  showCancelDialog ridercancel" + status);
                     createRidersNameList();
@@ -1705,7 +1818,7 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
                     // stopAnim();
                     // Toast.makeText(Map_Activity.this, "An unknown network error has occured", Toast.LENGTH_SHORT).show();
                 }
-                VolleyLog.d(TAG, "Error: " + error.getMessage());
+                LogUtils.d("Error: " + error.getMessage());
             }
         });
 
@@ -1762,7 +1875,7 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
                     // stopAnim();
                     // Toast.makeText(Map_Activity.this, "An unknown network error has occured", Toast.LENGTH_SHORT).show();
                 }
-                VolleyLog.d(TAG, "Error: " + error.getMessage());
+                LogUtils.d("Error: " + error.getMessage());
             }
         });
 
@@ -1899,14 +2012,14 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
         if (tripIDs.size() <= 1) {
             getState.putString("tripstate", "endClicked");
             getState.apply();
-            Log.d(TAG, "Value is: " + status);
+            LogUtils.d("Value is: " + status);
             tripIDs.remove(status);
             System.out.println(tripIDs + "Trip with Name  showCancelDialog ridercancel" + status);
             easyTimer.stop();
             Intent intent = new Intent(Map_Activity.this, Map_Activity.class);
             startActivity(intent);
         } else {
-            Log.d(TAG, "Value is: " + status);
+            LogUtils.d("Value is: " + status);
             tripIDs.remove(status);
             System.out.println(tripIDs + "Trip with Name  showCancelDialog ridercancel" + status);
             createRidersNameList();
@@ -2116,7 +2229,7 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
                     // stopAnim();
                     // Toast.makeText(Map_Activity.this, "An unknown network error has occured", Toast.LENGTH_SHORT).show();
                 }
-                VolleyLog.d(TAG, "Error: " + error.getMessage());
+                LogUtils.d("Error: " + error.getMessage());
             }
         });
 
@@ -2209,7 +2322,7 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
                     // stopAnim();
                     //   Toast.makeText(Map_Activity.this, "An unknown network error has occured", Toast.LENGTH_SHORT).show();
                 }
-                VolleyLog.d(TAG, "Error: " + error.getMessage());
+                LogUtils.d("Error: " + error.getMessage());
             }
         });
 
@@ -2290,7 +2403,7 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
                     LogUtils.i("no internet");
                     // stopAnim();
                 }
-                VolleyLog.d(TAG, "Error: " + error.getMessage());
+                LogUtils.d("Error: " + error.getMessage());
             }
         });
 
@@ -2368,7 +2481,7 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
                     // stopAnim();
                     //    Toast.makeText(Map_Activity.this, "An unknown network error has occured", Toast.LENGTH_SHORT).show();
                 }
-                VolleyLog.d(TAG, "Error: " + error.getMessage());
+                LogUtils.d("Error: " + error.getMessage());
             }
         });
 
@@ -2578,10 +2691,10 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
                             this, R.raw.style));
 
             if (!success) {
-                Log.e("Map_Activity", "Style parsing failed.");
+                LogUtils.e("Map_Activity "+"Style parsing failed.");
             }
         } catch (Resources.NotFoundException e) {
-            Log.e("Map_Activity", "Can't find style. Error: ", e);
+            LogUtils.e("Map_Activity "+"Can't find style. Error: ", e);
         }*/
 
 
@@ -3058,7 +3171,7 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
                     //
                     //    Toast.makeText(Map_Activity.this, "An unknown network error has occured", Toast.LENGTH_SHORT).show();
                 }
-                VolleyLog.d(TAG, "Error: " + error.getMessage());
+                LogUtils.d("Error: " + error.getMessage());
             }
         });
 
@@ -3066,8 +3179,6 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
         movieReq.setRetryPolicy(new DefaultRetryPolicy(20 * 1000, 1, 1.0f));
         AppController.getInstance().addToRequestQueue(movieReq);
     }
-
-    private DatabaseReference keyRef;
 
     public void getRequestStatus() {
         if (keyRef != null) {
@@ -3104,7 +3215,6 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
         mGoogleApiClient.connect();
         LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
     }
-
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
@@ -3165,7 +3275,7 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
         int kmInDec = Integer.valueOf(newFormat.format(km));
         double meter = valueResult % 1000;
         int meterInDec = Integer.valueOf(newFormat.format(meter));
-        Log.i("Radius Value", "" + valueResult + "   KM  " + kmInDec
+        LogUtils.i("Radius Value " + valueResult + "   KM  " + kmInDec
                 + " Meter   " + meterInDec);
 
         return Radius * c;
@@ -3373,16 +3483,6 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
             marker.setRotation(mCurrentLocation.getBearing());
     }
 
-
-    private static float getRotate(LatLng curPos, LatLng nextPos) {
-        double x1 = curPos.latitude;
-        double x2 = nextPos.latitude;
-        double y1 = curPos.longitude;
-        double y2 = nextPos.longitude;
-
-        return (float) (Math.atan2(y2 - y1, x2 - x1) / Math.PI * 180);
-    }
-
     private void updateUI() {
         if (Map_Activity.p == 0) {
             distance = distance + (lStart.distanceTo(lEnd) / 1000.00);
@@ -3411,7 +3511,6 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
             }
         }
     }
-
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
@@ -3517,112 +3616,6 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    private ValueEventListener tripRefValueEventListener = new ValueEventListener() {
-        @Override
-        public void onDataChange(DataSnapshot dataSnapshot) {
-            if (dataSnapshot.getValue() != null) {
-                if (!dataSnapshot.getValue().toString().equals("0")) {
-                    //tripID = dataSnapshot.getValue().toString();
-                    tripIDWithName = dataSnapshot.getValue().toString();
-                    LogUtils.i("THE TRIP ID FROM FBASE" + tripIDWithName);
-
-                    if (tripIDWithName.isEmpty() && tripIDWithName.length() == 0) {
-
-                        if (tripState.matches("btnendClicked")) {
-                        } else {
-                            showProgressDialog();
-                        }
-
-                    } else if (tripIDWithName.matches("empty") || tripIDWithName.equals("0")) {
-                        dismissProgressDialog();
-                    } else {
-                        //tripIDs.add("58b7a6bbda71b4437a8b4567"+":"+riderFirstName);
-                        //tripIDs.add("58b7a6e4da71b4817b8b4567"+":"+riderFirstName);
-
-                        //tripIDs.add("58ad92c3da71b47d5f8b4567"+":"+"name2");
-                        tripIDWithName = dataSnapshot.getValue().toString();
-                        String[] tripidArray = tripIDWithName.split(":");
-                        String Tripid = tripidArray[0];
-                        riderFirstName = tripidArray[1].replaceAll("%20", " ");
-
-                        tripID = Tripid;
-
-
-                        LogUtils.i("Trips List Firebase before" + tripIDs + "SIZE" + tripIDs.size());
-                        LogUtils.i("TripID Firebase" + tripID);
-                        LogUtils.i("TripID riderFirstName" + riderFirstNameService);
-                               /* if(riderFirstName==null || riderFirstName.isEmpty() || riderFirstName.equals("null"))
-                                {
-                                    LogUtils.i("Rider ID"+riderID);
-                                    if(riderID!=null){
-                                        getRiderName(riderID);
-                                    }
-                                    riderFirstName=riderFirstNameService;
-                                    LogUtils.i("Insiide Service" + riderFirstNameService);
-                                }*/
-
-                        if (tripIDs.size() == 0) {
-                            tripIDs.add(tripIDWithName);
-                                   /* Collections.reverse(tripIDs);*/
-                        } else {
-
-                            if (!tripIDs.contains(tripIDWithName)) {
-                                //if(!tripIDs.contains(tripID)){
-                                tripIDs.add(tripIDWithName);
-                                //Collections.reverse(tripIDs);
-
-                                LogUtils.i("trip id inside===>" + tripID);
-                                LogUtils.i("trip id inside===>" + riderFirstName);
-                                LogUtils.i("trip id inside===>" + tripIDs);
-                            } else {
-                                LogUtils.i("trip id outside===>" + tripID);
-                            }
-                        }
-                        LogUtils.i("Trips List Firebase after" + tripIDs);
-
-                        Set<String> hs = new LinkedHashSet<>();
-                        hs.addAll(tripIDs);
-                        tripIDs.clear();
-                        tripIDs.addAll(hs);
-                        LogUtils.i("before Trips List" + tripIDs);
-                                /*Collections.reverse(tripIDs);*/
-                        LogUtils.i("after Trips List" + tripIDs);
-
-                        //                        LogUtils.i("Trips List Firebase cleared" + tripIDs.get(0));
-
-                        newMap.put(riderFirstName, tripID);
-                        LogUtils.i("Trips List" + tripIDs);
-                        LogUtils.i("Trips List" + tripIDs.size());
-                        LogUtils.i("Trips hash map List" + newMap);
-
-                        createDistanceFireBase();
-
-                        saveArray(tripIDs, "tripidarray", getApplicationContext());
-
-                        if (!tripID.equals("empty")) {
-                            getState.putString("tripID", tripID);
-                            getState.apply();
-                        }
-
-                        getstatusfromfirebase(tripID);
-                        createRidersNameList();
-                        dismissProgressDialog();
-                    }
-                } else {
-                    dismissProgressDialog();
-                }
-
-            } else {
-                showProgressDialog();
-            }
-        }
-
-        @Override
-        public void onCancelled(DatabaseError databaseError) {
-
-        }
-    };
-
     @Override
     public void onDataChange(DataSnapshot dataSnapshot) {
 
@@ -3667,7 +3660,7 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
                 }
             }
 
-            Log.d("Locations updated", "location: " + dataSnapshot.getValue());
+            LogUtils.d("location updated - location: " + dataSnapshot.getValue());
 
         }
     }
@@ -3693,7 +3686,7 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
                     strReturnedAddress.append(returnedAddress.getAddressLine(i)).append("\n");
                 }
                 strAdd = strReturnedAddress.toString();
-                Log.w("My Current address", "" + strReturnedAddress.toString());
+                LogUtils.w("" + strReturnedAddress.toString());
 
 
                 if (strsetdestination == "updatereq") {
@@ -3711,11 +3704,11 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
 
 
             } else {
-                Log.w("My Current address", "No Address returned!");
+                LogUtils.w("No Address returned!");
             }
         } catch (Exception e) {
             e.printStackTrace();
-            Log.w("My Current address", "Canont get Address!");
+            LogUtils.w("Canont get Address!");
         }
         return strAdd;
     }
@@ -3775,7 +3768,7 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
 
                 @Override
                 public void onCancelled(DatabaseError error) {
-                    Log.w(TAG, "Failed to read value.", error.toException());
+                    LogUtils.w("Failed to read value " + error.toException());
                 }
             });
         }
@@ -3784,7 +3777,6 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
         LogUtils.i("list size==>" + String.valueOf(tripIDs.size()));
 
         if (tripIDs.isEmpty()) {
-
             checkAcceptStatus();
         }
 
@@ -3795,7 +3787,7 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
                 @Override
                 public void onRatingChanged(RatingBar arg0, float rateValue, boolean arg2) {
                     // TODO Auto-generated method stub
-                    Log.d("Rating", "your selected value is:" + rateValue);
+                    LogUtils.d("Rating " + "your selected value is:" + rateValue);
                     if (ratingcheck.equals("notupdate")) {
                         ratingcheck = "update";
                     } else if (ratingcheck.equals("update")) {
@@ -4163,7 +4155,6 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-
     public void checkWaypointCount(final String surge, final int minutes) {
 
         //checkAccepRef = FirebaseDatabase.getInstance().getReference().child("drivers_data").child(driverId + "/accept/status");
@@ -4206,7 +4197,6 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
         wayPointsCount.put("WayPointCount", 0);
         wayPointcountRef.updateChildren(wayPointsCount);
     }
-
 
     public void checkAcceptStatus() {
 
@@ -4351,8 +4341,9 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     public void showDialog(final DataSnapshot dataSnapshot) {
-        Log.w("My Current DIALOG", "INSIDE DIALOG!!!");
+        LogUtils.w("INSIDE DIALOG!!!");
 
+        LogUtils.w("driverId - " + driverId);
 
         ridercanceltripreference = FirebaseDatabase.getInstance().getReference().child("drivers_data").child(driverId).child("request").child("rider_id");
         ridercanceltripreference.addValueEventListener(new ValueEventListener() {
@@ -4373,7 +4364,7 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
 
             @Override
             public void onCancelled(DatabaseError error) {
-                Log.w(TAG, "Failed to read value.", error.toException());
+                LogUtils.w("Failed to read value - " + error.toException());
             }
         });
         //to avoid bad token exception
@@ -4404,6 +4395,7 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
                     LogUtils.i("dropAddress response ===>" + dropAddress);
                     LogUtils.i("ETA response ===>" + ETA);
                     LogUtils.i("pickupAddress response ===>" + pickupAddress);
+                    LogUtils.i("estFare response ===>" + estFare);
 
                     //set views
                     try {
@@ -4727,7 +4719,6 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
         mMapLocationListener = null;
     }
 
-
     public void onLocationReceived(Location location) {
 
         System.out.println(location.getProvider() + "," + location.getLatitude() + "," + location.getLongitude());
@@ -4833,6 +4824,28 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
     public void onDirectionFailure(Throwable t) {
         LogUtils.i("DIRECTION " + t);
     }
+
+   /* private ServiceConnection sc = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            LocationService.LocalBinder binder = (LocationService.LocalBinder) service;
+            myService = binder.getService();
+            distanceStatus = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            distanceStatus = false;
+        }
+    };*/
+
+   /* void unbindService() {
+        if (!distanceStatus)
+            return;
+        Intent i = new Intent(getApplicationContext(), LocationService.class);
+        unbindService(sc);
+        distanceStatus = false;
+    }*/
 
     public void onDirectionSuccessMarkerPlacing(Direction direction) {
 
@@ -5018,29 +5031,6 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
         return Html.fromHtml(htmlstring).toString().trim();
     }
 
-   /* private ServiceConnection sc = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            LocationService.LocalBinder binder = (LocationService.LocalBinder) service;
-            myService = binder.getService();
-            distanceStatus = true;
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            distanceStatus = false;
-        }
-    };*/
-
-   /* void unbindService() {
-        if (!distanceStatus)
-            return;
-        Intent i = new Intent(getApplicationContext(), LocationService.class);
-        unbindService(sc);
-        distanceStatus = false;
-    }*/
-
-
     @Override
     protected void onStart() {
         super.onStart();
@@ -5197,7 +5187,6 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
         taskMap.put("status", "2");
         databaseReference.updateChildren(taskMap);
     }
-
 
     //Get Trip status from Firebase
     private void getstatusfromfirebase(final String temptripID) {
@@ -5429,15 +5418,6 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
-    public static StateListDrawable selectorBackgroundColor(Context context
-            , int normal, int pressed) {
-        StateListDrawable states = new StateListDrawable();
-        states.addState(new int[]{android.R.attr.state_selected},
-                new ColorDrawable(pressed));
-        states.addState(new int[]{}, new ColorDrawable(normal));
-        return states;
-    }
-
     //Get Trip status from Firebase
     private void getRiderID(final String tripID) {
 
@@ -5548,7 +5528,6 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
         AppController.getInstance().addToRequestQueue(signUpReq);
     }
 
-
     /**
      * @param bitmap The bitmap which need to be converted
      * @return converting bitmap and return a string
@@ -5567,61 +5546,6 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
         } catch (Exception e) {
             e.getMessage();
             return null;
-        }
-    }
-
-
-    private class DoubleArrayEvaluator implements TypeEvaluator<double[]> {
-
-        private double[] mArray;
-
-        /**
-         * Create a DoubleArrayEvaluator that does not reuse the animated value. Care must be taken
-         * when using this option because on every evaluation a new <code>double[]</code> will be
-         * allocated.
-         *
-         * @see #DoubleArrayEvaluator(double[])
-         */
-        DoubleArrayEvaluator() {
-        }
-
-        /**
-         * Create a DoubleArrayEvaluator that reuses <code>reuseArray</code> for every evaluate() call.
-         * Caution must be taken to ensure that the value returned from
-         * {@link android.animation.ValueAnimator#getAnimatedValue()} is not cached, modified, or
-         * used across threads. The value will be modified on each <code>evaluate()</code> call.
-         *
-         * @param reuseArray The array to modify and return from <code>evaluate</code>.
-         */
-        DoubleArrayEvaluator(double[] reuseArray) {
-            mArray = reuseArray;
-        }
-
-        /**
-         * Interpolates the value at each index by the fraction. If
-         * {@link #DoubleArrayEvaluator(double[])} was used to construct this object,
-         * <code>reuseArray</code> will be returned, otherwise a new <code>double[]</code>
-         * will be returned.
-         *
-         * @param fraction   The fraction from the starting to the ending values
-         * @param startValue The start value.
-         * @param endValue   The end value.
-         * @return A <code>double[]</code> where each element is an interpolation between
-         * the same index in startValue and endValue.
-         */
-        @Override
-        public double[] evaluate(float fraction, double[] startValue, double[] endValue) {
-            double[] array = mArray;
-            if (array == null) {
-                array = new double[startValue.length];
-            }
-
-            for (int i = 0; i < array.length; i++) {
-                double start = startValue[i];
-                double end = endValue[i];
-                array[i] = start + (fraction * (end - start));
-            }
-            return array;
         }
     }
 
@@ -5658,7 +5582,7 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
 
                 @Override
                 public void onCancelled(DatabaseError error) {
-                    Log.w(TAG, "Failed to read value.", error.toException());
+                    LogUtils.w("Failed to read value - " + error.toException());
                 }
             });
         } catch (Exception e) {
@@ -5729,7 +5653,7 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void run() {
                 handler.postDelayed(this, Constants.updateLocationToFBHandlerTime);
-                Log.d(TAG, "Location Update Handler: Updating Now...");
+                LogUtils.d("Location Update Handler: Updating Now...");
                 updateLocationToFirebase(getFusedLocation());
             }
         }, Constants.updateLocationToFBHandlerTime);
@@ -5777,7 +5701,7 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
                     // stopAnim();
                     //      Toast.makeText(Map_Activity.this, "An unknown network error has occured", Toast.LENGTH_SHORT).show();
                 }
-                VolleyLog.d(TAG, "Error: " + error.getMessage());
+                LogUtils.d("Error: " + error.getMessage());
             }
         });
 
@@ -5805,79 +5729,6 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
 
             jsonTollObject = null;
             ex.printStackTrace();
-        }
-    }
-
-    // Async Task Class
-    private class getTollDeatilsAsycn extends AsyncTask<String, String, String> {
-
-        ArrayList<LatLng> directionPositionList;
-        Context context;
-        Map<LatLng, Marker> tollMarkersMap;
-        JSONObject jsonTollObject;
-
-        private getTollDeatilsAsycn(ArrayList<LatLng> directionPositionList, Map<LatLng, Marker> tollMarkersMap, Context context, JSONObject jsonTollObject) {
-            this.directionPositionList = directionPositionList;
-            this.tollMarkersMap = tollMarkersMap;
-            this.context = context;
-            this.jsonTollObject = jsonTollObject;
-        }
-
-        // Download Music File from Internet
-        @Override
-        protected String doInBackground(String... f_url) {
-
-            // Parsing json
-            try {
-
-                JSONArray features = jsonTollObject.getJSONArray("features");
-
-                for (int i = 0; i < features.length(); i++) {
-
-                    JSONObject tolllist = features.getJSONObject(i);
-
-                    JSONObject geometry = tolllist.getJSONObject("geometry");
-                    JSONArray latlng = geometry.getJSONArray("coordinates");
-
-                    //LogUtils.i("feature===>"+latlng.getDouble(1)+"   "+latlng.getDouble(0));
-                    final LatLng tollposOG = new LatLng(latlng.getDouble(1), latlng.getDouble(0));
-
-                    if (isLocationOnPath(tollposOG, directionPositionList, true, 5)) {
-
-                        LogUtils.i("Testing Location: Yeah Did it...");
-                        JSONObject properties = tolllist.getJSONObject("properties");
-                        final String Name = properties.optString("Name");
-                        final String ZoneID = properties.optString("ZoneID");
-
-                        Marker tempmarkertoll = this.tollMarkersMap.get(tollposOG);
-                        LogUtils.i("Testing Location: " + tempmarkertoll);
-
-                        if (tempmarkertoll == null) {
-
-                            new Handler(Looper.getMainLooper()).post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Log.d("UI thread", "I am the UI thread");
-
-                                    drawMarkerWithCircle(tollposOG, Name, ZoneID);
-                                }
-                            });
-                        }
-
-                    }
-                }
-            } catch (Exception e) {
-                //stopAnim();
-                e.printStackTrace();
-            }
-
-            return null;
-        }
-
-        // Once Music File is downloaded
-        @Override
-        protected void onPostExecute(String file_url) {
-            // Dismiss the dialog after the Music file was downloaded
         }
     }
 
@@ -5914,7 +5765,6 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
             }
         }
     }
-
 
     private void drawMarkerWithCircle(LatLng position, String Name, String ZoneID) {
 /*        double radiusInMeters = 5;
@@ -6162,8 +6012,8 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        Log.d("onActivityResult()res:", Integer.toString(resultCode));
-        Log.d("onActivityResult()req:", Integer.toString(requestCode));
+        LogUtils.d("onActivityResult()res: " + Integer.toString(resultCode));
+        LogUtils.d("onActivityResult()req: " + Integer.toString(requestCode));
 
         switch (requestCode) {
             case Constants.REQUEST_CHECK_SETTINGS:
@@ -6297,7 +6147,6 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-
     private void updateEndLocation(LatLng destLocation) {
         if (mCurrentLocation != null)
             orginLocation = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
@@ -6308,107 +6157,6 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
                 .unit(Unit.METRIC)
                 .transportMode(TransportMode.DRIVING)
                 .execute(Map_Activity.this);
-    }
-
-    private class getTollAmount extends AsyncTask<String, Void, String> {
-
-
-        int ASYNC_ERP_SKIP_COUNT;
-        String ASYNC_ZONEID, ASYNC_VEHICLETYPE;
-
-        getTollAmount(int ASYNC_ERP_SKIP_COUNT, String ASYNC_ZONEID, String ASYNC_VEHICLETYPE) {
-
-            this.ASYNC_ERP_SKIP_COUNT = ASYNC_ERP_SKIP_COUNT;
-            this.ASYNC_ZONEID = ASYNC_ZONEID;
-            this.ASYNC_VEHICLETYPE = ASYNC_VEHICLETYPE;
-
-        }
-
-        protected void onPreExecute() {
-
-
-        }
-
-        protected String doInBackground(String... arg0) {
-
-            URL url;
-            HttpURLConnection urlConnection = null;
-            try {
-                //url = new URL("http://54.172.2.238/driver/checkEmailPhone/email/praveen@gmail.com/mobile/9629888596");
-                url = new URL("http://datamall2.mytransport.sg/ltaodataservice/ERPRates?$skip=" + String.valueOf(ASYNC_ERP_SKIP_COUNT));
-
-                urlConnection = (HttpURLConnection) url.openConnection();
-                urlConnection.setReadTimeout(20000 /* milliseconds */);
-                urlConnection.setConnectTimeout(20000 /* milliseconds */);
-                urlConnection.setDoInput(true);
-                urlConnection.setRequestProperty("AccountKey", "zVmrQmzQTZOA0f/1+89rPQ==");
-                urlConnection.setRequestProperty("accept", "application/json");
-
-                InputStream in = urlConnection.getInputStream();
-
-                BufferedReader ins = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
-                String inputLine;
-                StringBuilder response = new StringBuilder();
-
-                while ((inputLine = ins.readLine()) != null) {
-                    response.append(inputLine);
-                }
-                in.close();
-
-                return response.toString();
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                return null;
-            } finally {
-                if (urlConnection != null) {
-                    urlConnection.disconnect();
-                }
-            }
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-
-            fetchERPDeatils(result, ASYNC_ZONEID, ASYNC_VEHICLETYPE);
-
-        }
-    }
-
-    private class getUpdateAddress extends AsyncTask<String, Void, String> {
-
-        Double updatelat, updatlng;
-
-        private getUpdateAddress(Double lat, Double lng) {
-            this.updatelat = lat;
-            this.updatlng = lng;
-        }
-
-
-        protected void onPreExecute() {
-        }
-
-        protected String doInBackground(String... arg0) {
-            try {
-
-                getCompleteAddressString(updatelat, updatlng);
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                return null;
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-
-            String strDesLoc = txtRiderDestination.getText().toString();
-            if (strDesLoc.matches("null") & strDesLoc.matches(""))
-                strDesLoc = "Destination Location Updated by Rider.";
-
-            generateNotification(getApplicationContext(), "Destination Location Updated: " + strDesLoc);
-        }
     }
 
     public void checkOverlayPermission() {
@@ -6711,7 +6459,6 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
         waypointcount = count;
     }
 
-
     public void getRoutePoints(LatLng origin, LatLng dest) {
 
         LogUtils.i("origin route==>" + origin + " dest route==>" + dest);
@@ -6782,107 +6529,12 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
             br.close();
 
         } catch (Exception e) {
-            Log.d("Exception on dwnld url", e.toString());
+            LogUtils.d("Exception on dwnld url" + e.toString());
         } finally {
             urlConnection.disconnect();
         }
         return data;
     }
-
-    // Fetches data from url passed
-    private class DownloadTask extends AsyncTask<String, Void, String> {
-
-        // Downloading data in non-ui thread
-        @Override
-        protected String doInBackground(String... url) {
-
-            // For storing data from web service
-            String data = "";
-
-            try {
-                // Fetching the data from web service
-                data = downloadUrl(url[0]);
-            } catch (Exception e) {
-                Log.d("Background Task", e.toString());
-            }
-            return data;
-        }
-
-        // Executes in UI thread, after the execution of
-        // doInBackground()
-        @Override
-        protected void onPostExecute(String result) {
-            super.onPostExecute(result);
-
-            ParserTask parserTask = new ParserTask();
-
-            // Invokes the thread for parsing the JSON data
-            parserTask.execute(result);
-        }
-    }
-
-    /**
-     * A class to parse the Google Places in JSON format
-     */
-    private class ParserTask extends AsyncTask<String, Integer, List<List<HashMap<String, String>>>> {
-
-        // Parsing the data in non-ui thread
-        @Override
-        protected List<List<HashMap<String, String>>> doInBackground(String... jsonData) {
-
-            JSONObject jObject;
-            List<List<HashMap<String, String>>> routes = null;
-
-            try {
-                jObject = new JSONObject(jsonData[0]);
-                DirectionsJSONParser parser = new DirectionsJSONParser();
-
-                // Starts parsing data
-                routes = parser.parse(jObject);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return routes;
-        }
-
-        // Executes in UI thread, after the parsing process
-        @Override
-        protected void onPostExecute(List<List<HashMap<String, String>>> result) {
-
-            PolylineOptions lineOptions;
-            // Traversing through all the routes
-            for (int i = 0; i < result.size(); i++) {
-                points = new ArrayList<>();
-                lineOptions = new PolylineOptions();
-
-                // Fetching i-th route
-                List<HashMap<String, String>> path = result.get(i);
-
-                // Fetching all the points in i-th route
-                for (int j = 0; j < path.size(); j++) {
-                    HashMap<String, String> point = path.get(j);
-
-                    double lat = Double.parseDouble(point.get("lat"));
-                    double lng = Double.parseDouble(point.get("lng"));
-                    LatLng position = new LatLng(lat, lng);
-
-                    points.add(position);
-
-                }
-                LogUtils.i("collected routs are in back ====>" + points);
-                // Adding all the points in the route to LineOptions
-                lineOptions.addAll(points);
-                lineOptions.width(5);
-                lineOptions.color(Color.RED);
-            }
-
-
-            // Drawing polyline in the Google Map for the i-th route
-            // multipolyline = mMap.addPolyline(lineOptions);
-            placeMultiDestMarkerPolyline();
-        }
-    }
-
 
     public void placeMultiDestMarkerPolyline() {
 
@@ -6927,27 +6579,6 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
 
             LogUtils.i("final points are===>" + points);
         }
-    }
-
-    // Convert a view to bitmap
-    public static Bitmap createDrawableFromView(Context context, View view, String markerCount) {
-
-        TextView markerCountTxt = (TextView) view.findViewById(R.id.num_txt);
-        markerCountTxt.setText(markerCount);
-
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        ((Activity) context).getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-        view.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        view.measure(displayMetrics.widthPixels, displayMetrics.heightPixels);
-        view.layout(0, 0, displayMetrics.widthPixels, displayMetrics.heightPixels);
-        view.buildDrawingCache();
-
-        Bitmap bitmap = Bitmap.createBitmap(view.getMeasuredWidth(), view.getMeasuredHeight(), Bitmap.Config.ARGB_8888);
-
-        Canvas canvas = new Canvas(bitmap);
-        view.draw(canvas);
-
-        return bitmap;
     }
 
     public void PlaceType(String latlng) {
@@ -7019,7 +6650,7 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
 
                     Toast.makeText(Map_Activity.this, "No Internet Connection", Toast.LENGTH_SHORT).show();
                 }
-                VolleyLog.d("Error: " + error.getMessage());
+                LogUtils.d("Error: " + error.getMessage());
 
             }
         });
@@ -7243,5 +6874,327 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
 
     public boolean isOnlineButtunClicked() {
         return prefs.getBoolean("goOnline", false);
+    }
+
+    private class DoubleArrayEvaluator implements TypeEvaluator<double[]> {
+
+        private double[] mArray;
+
+        /**
+         * Create a DoubleArrayEvaluator that does not reuse the animated value. Care must be taken
+         * when using this option because on every evaluation a new <code>double[]</code> will be
+         * allocated.
+         *
+         * @see #DoubleArrayEvaluator(double[])
+         */
+        DoubleArrayEvaluator() {
+        }
+
+        /**
+         * Create a DoubleArrayEvaluator that reuses <code>reuseArray</code> for every evaluate() call.
+         * Caution must be taken to ensure that the value returned from
+         * {@link android.animation.ValueAnimator#getAnimatedValue()} is not cached, modified, or
+         * used across threads. The value will be modified on each <code>evaluate()</code> call.
+         *
+         * @param reuseArray The array to modify and return from <code>evaluate</code>.
+         */
+        DoubleArrayEvaluator(double[] reuseArray) {
+            mArray = reuseArray;
+        }
+
+        /**
+         * Interpolates the value at each index by the fraction. If
+         * {@link #DoubleArrayEvaluator(double[])} was used to construct this object,
+         * <code>reuseArray</code> will be returned, otherwise a new <code>double[]</code>
+         * will be returned.
+         *
+         * @param fraction   The fraction from the starting to the ending values
+         * @param startValue The start value.
+         * @param endValue   The end value.
+         * @return A <code>double[]</code> where each element is an interpolation between
+         * the same index in startValue and endValue.
+         */
+        @Override
+        public double[] evaluate(float fraction, double[] startValue, double[] endValue) {
+            double[] array = mArray;
+            if (array == null) {
+                array = new double[startValue.length];
+            }
+
+            for (int i = 0; i < array.length; i++) {
+                double start = startValue[i];
+                double end = endValue[i];
+                array[i] = start + (fraction * (end - start));
+            }
+            return array;
+        }
+    }
+
+    // Async Task Class
+    private class getTollDeatilsAsycn extends AsyncTask<String, String, String> {
+
+        ArrayList<LatLng> directionPositionList;
+        Context context;
+        Map<LatLng, Marker> tollMarkersMap;
+        JSONObject jsonTollObject;
+
+        private getTollDeatilsAsycn(ArrayList<LatLng> directionPositionList, Map<LatLng, Marker> tollMarkersMap, Context context, JSONObject jsonTollObject) {
+            this.directionPositionList = directionPositionList;
+            this.tollMarkersMap = tollMarkersMap;
+            this.context = context;
+            this.jsonTollObject = jsonTollObject;
+        }
+
+        // Download Music File from Internet
+        @Override
+        protected String doInBackground(String... f_url) {
+
+            // Parsing json
+            try {
+
+                JSONArray features = jsonTollObject.getJSONArray("features");
+
+                for (int i = 0; i < features.length(); i++) {
+
+                    JSONObject tolllist = features.getJSONObject(i);
+
+                    JSONObject geometry = tolllist.getJSONObject("geometry");
+                    JSONArray latlng = geometry.getJSONArray("coordinates");
+
+                    //LogUtils.i("feature===>"+latlng.getDouble(1)+"   "+latlng.getDouble(0));
+                    final LatLng tollposOG = new LatLng(latlng.getDouble(1), latlng.getDouble(0));
+
+                    if (isLocationOnPath(tollposOG, directionPositionList, true, 5)) {
+
+                        LogUtils.i("Testing Location: Yeah Did it...");
+                        JSONObject properties = tolllist.getJSONObject("properties");
+                        final String Name = properties.optString("Name");
+                        final String ZoneID = properties.optString("ZoneID");
+
+                        Marker tempmarkertoll = this.tollMarkersMap.get(tollposOG);
+                        LogUtils.i("Testing Location: " + tempmarkertoll);
+
+                        if (tempmarkertoll == null) {
+
+                            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    LogUtils.d("UI thread " + "I am the UI thread");
+
+                                    drawMarkerWithCircle(tollposOG, Name, ZoneID);
+                                }
+                            });
+                        }
+
+                    }
+                }
+            } catch (Exception e) {
+                //stopAnim();
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+        // Once Music File is downloaded
+        @Override
+        protected void onPostExecute(String file_url) {
+            // Dismiss the dialog after the Music file was downloaded
+        }
+    }
+
+    private class getTollAmount extends AsyncTask<String, Void, String> {
+
+
+        int ASYNC_ERP_SKIP_COUNT;
+        String ASYNC_ZONEID, ASYNC_VEHICLETYPE;
+
+        getTollAmount(int ASYNC_ERP_SKIP_COUNT, String ASYNC_ZONEID, String ASYNC_VEHICLETYPE) {
+
+            this.ASYNC_ERP_SKIP_COUNT = ASYNC_ERP_SKIP_COUNT;
+            this.ASYNC_ZONEID = ASYNC_ZONEID;
+            this.ASYNC_VEHICLETYPE = ASYNC_VEHICLETYPE;
+
+        }
+
+        protected void onPreExecute() {
+
+
+        }
+
+        protected String doInBackground(String... arg0) {
+
+            URL url;
+            HttpURLConnection urlConnection = null;
+            try {
+                //url = new URL("http://54.172.2.238/driver/checkEmailPhone/email/praveen@gmail.com/mobile/9629888596");
+                url = new URL("http://datamall2.mytransport.sg/ltaodataservice/ERPRates?$skip=" + String.valueOf(ASYNC_ERP_SKIP_COUNT));
+
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setReadTimeout(20000 /* milliseconds */);
+                urlConnection.setConnectTimeout(20000 /* milliseconds */);
+                urlConnection.setDoInput(true);
+                urlConnection.setRequestProperty("AccountKey", "zVmrQmzQTZOA0f/1+89rPQ==");
+                urlConnection.setRequestProperty("accept", "application/json");
+
+                InputStream in = urlConnection.getInputStream();
+
+                BufferedReader ins = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+                String inputLine;
+                StringBuilder response = new StringBuilder();
+
+                while ((inputLine = ins.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+
+                return response.toString();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                return null;
+            } finally {
+                if (urlConnection != null) {
+                    urlConnection.disconnect();
+                }
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+
+            fetchERPDeatils(result, ASYNC_ZONEID, ASYNC_VEHICLETYPE);
+
+        }
+    }
+
+    private class getUpdateAddress extends AsyncTask<String, Void, String> {
+
+        Double updatelat, updatlng;
+
+        private getUpdateAddress(Double lat, Double lng) {
+            this.updatelat = lat;
+            this.updatlng = lng;
+        }
+
+
+        protected void onPreExecute() {
+        }
+
+        protected String doInBackground(String... arg0) {
+            try {
+
+                getCompleteAddressString(updatelat, updatlng);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                return null;
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+
+            String strDesLoc = txtRiderDestination.getText().toString();
+            if (strDesLoc.matches("null") & strDesLoc.matches(""))
+                strDesLoc = "Destination Location Updated by Rider.";
+
+            generateNotification(getApplicationContext(), "Destination Location Updated: " + strDesLoc);
+        }
+    }
+
+    // Fetches data from url passed
+    private class DownloadTask extends AsyncTask<String, Void, String> {
+
+        // Downloading data in non-ui thread
+        @Override
+        protected String doInBackground(String... url) {
+
+            // For storing data from web service
+            String data = "";
+
+            try {
+                // Fetching the data from web service
+                data = downloadUrl(url[0]);
+            } catch (Exception e) {
+                LogUtils.d("Background Task " + e.toString());
+            }
+            return data;
+        }
+
+        // Executes in UI thread, after the execution of
+        // doInBackground()
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+
+            ParserTask parserTask = new ParserTask();
+
+            // Invokes the thread for parsing the JSON data
+            parserTask.execute(result);
+        }
+    }
+
+    /**
+     * A class to parse the Google Places in JSON format
+     */
+    private class ParserTask extends AsyncTask<String, Integer, List<List<HashMap<String, String>>>> {
+
+        // Parsing the data in non-ui thread
+        @Override
+        protected List<List<HashMap<String, String>>> doInBackground(String... jsonData) {
+
+            JSONObject jObject;
+            List<List<HashMap<String, String>>> routes = null;
+
+            try {
+                jObject = new JSONObject(jsonData[0]);
+                DirectionsJSONParser parser = new DirectionsJSONParser();
+
+                // Starts parsing data
+                routes = parser.parse(jObject);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return routes;
+        }
+
+        // Executes in UI thread, after the parsing process
+        @Override
+        protected void onPostExecute(List<List<HashMap<String, String>>> result) {
+
+            PolylineOptions lineOptions;
+            // Traversing through all the routes
+            for (int i = 0; i < result.size(); i++) {
+                points = new ArrayList<>();
+                lineOptions = new PolylineOptions();
+
+                // Fetching i-th route
+                List<HashMap<String, String>> path = result.get(i);
+
+                // Fetching all the points in i-th route
+                for (int j = 0; j < path.size(); j++) {
+                    HashMap<String, String> point = path.get(j);
+
+                    double lat = Double.parseDouble(point.get("lat"));
+                    double lng = Double.parseDouble(point.get("lng"));
+                    LatLng position = new LatLng(lat, lng);
+
+                    points.add(position);
+
+                }
+                LogUtils.i("collected routs are in back ====>" + points);
+                // Adding all the points in the route to LineOptions
+                lineOptions.addAll(points);
+                lineOptions.width(5);
+                lineOptions.color(Color.RED);
+            }
+
+
+            // Drawing polyline in the Google Map for the i-th route
+            // multipolyline = mMap.addPolyline(lineOptions);
+            placeMultiDestMarkerPolyline();
+        }
     }
 }

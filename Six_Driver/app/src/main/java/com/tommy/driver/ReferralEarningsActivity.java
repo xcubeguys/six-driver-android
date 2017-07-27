@@ -13,7 +13,6 @@ import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.NoConnectionError;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.tommy.driver.adapter.AppController;
 import com.tommy.driver.adapter.Constants;
@@ -36,32 +35,24 @@ import java.util.Date;
 public class ReferralEarningsActivity extends AppCompatActivity {
     String tripTime, driverId = null, earnings, earnings_daily, earnings_weekly, earnings_monthly, earnings_yearly, userID;
     SharedPreferences state;
+    @ViewById(R.id.trip_amount)
+    TextView earningamount;
+    @ViewById(R.id.trip_amount_daily)
+    TextView earningamount_daily;
+    @ViewById(R.id.trip_amount_weekly)
+    TextView earningamount_weekly;
+    @ViewById(R.id.trip_amount_monthly)
+    TextView earningamount_monthly;
+    @ViewById(R.id.trip_amount_yearly)
+    TextView earningamount_yearly;
+    @ViewById(R.id.count)
+    TextView lastTripTime;
 
     @Click(R.id.back)
     void back() {
         Intent intent = new Intent(this, Map_Activity.class);
         startActivity(intent);
     }
-
-
-    @ViewById(R.id.trip_amount)
-    TextView earningamount;
-
-    @ViewById(R.id.trip_amount_daily)
-    TextView earningamount_daily;
-
-    @ViewById(R.id.trip_amount_weekly)
-    TextView earningamount_weekly;
-
-    @ViewById(R.id.trip_amount_monthly)
-    TextView earningamount_monthly;
-
-    @ViewById(R.id.trip_amount_yearly)
-    TextView earningamount_yearly;
-
-    @ViewById(R.id.count)
-    TextView lastTripTime;
-
 
     @Click(R.id.referral_user)
     void viewReferralUser() {
@@ -182,7 +173,7 @@ public class ReferralEarningsActivity extends AppCompatActivity {
                     //
                     //    Toast.makeText(Map_Activity.this, "An unknown network error has occured", Toast.LENGTH_SHORT).show();
                 }
-                VolleyLog.d("Error", "EarningActivity: " + error.getMessage());
+                LogUtils.d("EarningActivity: " + error.getMessage());
             }
         });
 

@@ -1,7 +1,8 @@
 package com.tommy.driver;
 
 import android.content.Context;
-import android.util.Log;
+
+import com.tommy.driver.utils.LogUtils;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -17,7 +18,6 @@ import java.util.List;
  * Created by hbb20 on 11/1/16.
  */
 class Country {
-    static String TAG = "Class Country";
     String nameCode;
     String phoneCode;
     String name;
@@ -3016,9 +3016,9 @@ class Country {
 
     public void log() {
         try {
-            Log.d(TAG, "Country->" + nameCode + ":" + phoneCode + ":" + name);
+            LogUtils.d("Country->" + nameCode + ":" + phoneCode + ":" + name);
         } catch (NullPointerException ex) {
-            Log.d(TAG, "Null");
+            LogUtils.d("Null");
         }
     }
 

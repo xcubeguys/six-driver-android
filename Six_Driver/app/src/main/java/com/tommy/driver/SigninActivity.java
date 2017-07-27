@@ -14,7 +14,6 @@ import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.NoConnectionError;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.mobsandgeeks.saripaar.ValidationError;
 import com.mobsandgeeks.saripaar.Validator;
@@ -150,7 +149,7 @@ public class SigninActivity extends AppCompatActivity implements Validator.Valid
                     // stopAnim();
                     Toast.makeText(SigninActivity.this, "An unknown network error has occured", Toast.LENGTH_SHORT).show();
                 }
-                VolleyLog.d(TAG, "Error: " + error.getMessage());
+                LogUtils.d("Error: " + error.getMessage());
             }
         });
 

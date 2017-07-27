@@ -15,7 +15,6 @@ import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Base64;
-import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
@@ -23,7 +22,6 @@ import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.NoConnectionError;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
@@ -66,21 +64,20 @@ import java.util.Arrays;
 @EActivity(R.layout.activity_launch)
 public class LaunchActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener {
 
-    private static final String TAG = "LaunchActivity";
     GoogleSignInOptions gso;
     GoogleApiClient mGoogleApiClient;
-    private int GOOGLE_SIGN_IN = 100;
     boolean doubleBackToExitPressedOnce = false;
     SharedPreferences.Editor editor;
-    //Facebook Declaration
-    private CallbackManager callbackManager;
     ProgressDialog progressDialog;
-    private AccessTokenTracker accessTokenTracker;
-    private ProfileTracker profileTracker;
     Bundle parameters;
     String driverID, driverFirstName, driverLastName, driverEmail, driverMobile, carcategory;
     String fbEmail, fbFullName, fbFirstName, fbLastName, fbUserProfile, fbID, fbToken, driverId;
     String googleEmail, googleFirstName, googleLastName, googleUserProfile, googleID, googleIDToken;
+    private int GOOGLE_SIGN_IN = 100;
+    //Facebook Declaration
+    private CallbackManager callbackManager;
+    private AccessTokenTracker accessTokenTracker;
+    private ProfileTracker profileTracker;
 
     @AfterViews
     void launchActivity() {
@@ -165,7 +162,7 @@ public class LaunchActivity extends AppCompatActivity implements GoogleApiClient
                             profileTracker = new ProfileTracker() {
                                 @Override
                                 protected void onCurrentProfileChanged(Profile profile, Profile profile2) {
-                                    //Log.v("facebook - profile2", profile2.getFirstName());
+                                    //LogUtils.i("facebook - profile2 "+profile2.getFirstName());
                                     displayMessage(profile2);
                                     profileTracker.stopTracking();
                                 }
@@ -174,7 +171,7 @@ public class LaunchActivity extends AppCompatActivity implements GoogleApiClient
                         } else {
                             Profile profile = Profile.getCurrentProfile();
                             displayMessage(profile);
-                            //Log.v("facebook - profile", profile.getFirstName());
+                            //LogUtils.i("facebook - profile - "+profile.getFirstName());
                         }
 
                         GraphRequest request = GraphRequest.newMeRequest(
@@ -220,7 +217,7 @@ public class LaunchActivity extends AppCompatActivity implements GoogleApiClient
 
                     @Override
                     public void onError(FacebookException e) {
-                        Log.d("Facebooksdk", "Login with Facebook failure", e);
+                        LogUtils.d("Facebooksdk " + "Login with Facebook failure " + e);
                         Toast.makeText(LaunchActivity.this, "An unknown network error has occured", Toast.LENGTH_LONG).show();
                         LogUtils.i("Facebook Login failed!!");
                     }
@@ -244,14 +241,14 @@ public class LaunchActivity extends AppCompatActivity implements GoogleApiClient
                 String something = new String(Base64.encode(md.digest(), 0));
                 //String something = new String(Base64.encodeBytes(md.digest()));
                 LogUtils.i("hash key value" + something);
-                Log.e("hash key", something);
+                LogUtils.e("hash key - " + something);
             }
         } catch (PackageManager.NameNotFoundException e1) {
-            Log.e("name not found", e1.toString());
+            LogUtils.e("name not found " + e1.toString());
         } catch (NoSuchAlgorithmException e) {
-            Log.e("no such an algorithm", e.toString());
+            LogUtils.e("no such an algorithm " + e.toString());
         } catch (Exception e) {
-            Log.e("exception", e.toString());
+            LogUtils.e("exception " + e.toString());
         }
 
     }
@@ -299,7 +296,7 @@ public class LaunchActivity extends AppCompatActivity implements GoogleApiClient
 
     private void handleSignInResult(GoogleSignInResult result) {
 
-        Log.d(TAG, "handleSignInResult:" + result.isSuccess());
+        LogUtils.d("handleSignInResult:" + result.isSuccess());
         if (result.isSuccess()) {
             // Signed in successfully, show authenticated UI.
             GoogleSignInAccount acct = result.getSignInAccount();
@@ -475,7 +472,7 @@ public class LaunchActivity extends AppCompatActivity implements GoogleApiClient
                     // stopAnim();
                     // Toast.makeText(DocUpload_Activity.this, "An unknown network error has occured", Toast.LENGTH_SHORT).show();
                 }
-                VolleyLog.d("DOCUMENT ACTIVITY", "Error: " + error.getMessage());
+                LogUtils.d("Error: " + error.getMessage());
             }
         });
 
@@ -547,7 +544,7 @@ public class LaunchActivity extends AppCompatActivity implements GoogleApiClient
                     // stopAnim();
                     //  Toast.makeText(DocUpload_Activity.this, "An unknown network error has occured", Toast.LENGTH_SHORT).show();
                 }
-                VolleyLog.d("DOCUMENT ACTIVITY", "Error: " + error.getMessage());
+                LogUtils.d("Error: " + error.getMessage());
             }
         });
 

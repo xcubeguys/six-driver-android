@@ -11,7 +11,6 @@ import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.NoConnectionError;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.mobsandgeeks.saripaar.ValidationError;
 import com.mobsandgeeks.saripaar.Validator;
@@ -35,19 +34,18 @@ import java.util.List;
 @EActivity(R.layout.activity_forgot_password)
 public class ForgotPasswordActivity extends AppCompatActivity implements Validator.ValidationListener {
 
+    @NotEmpty(message = "")
+    @Email(message = "Enter a valid email")
+    @ViewById(R.id.edtForgotEmail)
+    EditText edtEmail;
+    Validator validator;
+    String strEmail;
+
     @Click(R.id.back)
     void getBack() {
         Intent intent = new Intent(this, SigninActivity_.class);
         startActivity(intent);
     }
-
-    @NotEmpty(message = "")
-    @Email(message = "Enter a valid email")
-    @ViewById(R.id.edtForgotEmail)
-    EditText edtEmail;
-
-    Validator validator;
-    String strEmail;
 
     @Click(R.id.btnSubmit)
     void con() {
@@ -114,7 +112,7 @@ public class ForgotPasswordActivity extends AppCompatActivity implements Validat
                     // stopAnim();
                     Toast.makeText(ForgotPasswordActivity.this, "An unknown network error has occured", Toast.LENGTH_SHORT).show();
                 }
-                VolleyLog.d("ForgotPassword", "Error: " + error.getMessage());
+                LogUtils.d("ForgotPassword - " + "Error: " + error.getMessage());
             }
         });
 

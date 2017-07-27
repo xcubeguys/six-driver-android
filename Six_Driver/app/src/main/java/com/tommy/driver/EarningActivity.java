@@ -23,7 +23,6 @@ import com.android.volley.NoConnectionError;
 import com.android.volley.Response;
 import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
-import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.tommy.driver.adapter.AppController;
 import com.tommy.driver.adapter.Constants;
@@ -63,44 +62,41 @@ public class EarningActivity extends AppCompatActivity {
     Dialog dialog;
     Double total = 0.0, totalweek = 0.0, totalmonth = 0.0, totalyear = 0.0;
     SweetAlertDialog pDialog;
+    Date endDate, startDate;
+    @ViewById(R.id.bank_info)
+    ImageView bank_info;
+    @ViewById(R.id.trip_amount)
+    TextView earningamount;
+    @ViewById(R.id.trip_amount_daily)
+    TextView earningamount_daily;
+    @ViewById(R.id.trip_amount_weekly)
+    TextView earningamount_weekly;
+    @ViewById(R.id.trip_amount_monthly)
+    TextView earningamount_monthly;
+    @ViewById(R.id.trip_amount_yearly)
+    TextView earningamount_yearly;
+    @ViewById(R.id.count)
+    TextView referral_count;
+    @ViewById(R.id.timetrip)
+    TextView lastTripTime;
     private ArrayList<YourTrips> tripsListItemsDaily = new ArrayList<>();
     private ArrayList<YourTrips> tripsListItemsWeakly = new ArrayList<>();
     private ArrayList<YourTrips> tripsListItemsMonthly = new ArrayList<>();
     private ArrayList<YourTrips> tripsListItemsYearly = new ArrayList<>();
-
     private CustomBaseAdapter tripsListsAdapter;
 
-    Date endDate, startDate;
+    public static String getCurrentTimeStamp() {
+        SimpleDateFormat formDate = new SimpleDateFormat("dd-MM-yyyy");
+
+        // String strDate = formDate.format(System.currentTimeMillis()); // option 1
+        return formDate.format(new Date());
+    }
 
     @Click(R.id.back)
     void back() {
         Intent intent = new Intent(this, Map_Activity.class);
         startActivity(intent);
     }
-
-    @ViewById(R.id.bank_info)
-    ImageView bank_info;
-
-    @ViewById(R.id.trip_amount)
-    TextView earningamount;
-
-    @ViewById(R.id.trip_amount_daily)
-    TextView earningamount_daily;
-
-    @ViewById(R.id.trip_amount_weekly)
-    TextView earningamount_weekly;
-
-    @ViewById(R.id.trip_amount_monthly)
-    TextView earningamount_monthly;
-
-    @ViewById(R.id.trip_amount_yearly)
-    TextView earningamount_yearly;
-
-    @ViewById(R.id.count)
-    TextView referral_count;
-
-    @ViewById(R.id.timetrip)
-    TextView lastTripTime;
 
     @Click(R.id.viewtxt)
     void viewdailyearning() {
@@ -288,7 +284,6 @@ public class EarningActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-
     public void showTotalOnlineDuration(String getOnlineDuration, TextView tvduration) {
 
         TimeZone GMT = TimeZone.getTimeZone("GMT");
@@ -455,7 +450,7 @@ public class EarningActivity extends AppCompatActivity {
                 if (error instanceof NoConnectionError) {
                     LogUtils.i("No Internet");
                 }
-                VolleyLog.d("Error", "EarningActivity: " + error.getMessage());
+                LogUtils.d("EarningActivity: " + error.getMessage());
             }
         });
 
@@ -718,12 +713,5 @@ public class EarningActivity extends AppCompatActivity {
 
         return b;
 
-    }
-
-    public static String getCurrentTimeStamp() {
-        SimpleDateFormat formDate = new SimpleDateFormat("dd-MM-yyyy");
-
-        // String strDate = formDate.format(System.currentTimeMillis()); // option 1
-        return formDate.format(new Date());
     }
 }

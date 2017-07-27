@@ -13,7 +13,6 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -33,7 +32,6 @@ import com.android.volley.Response;
 import com.android.volley.ServerError;
 import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
-import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.bumptech.glide.Glide;
 import com.firebase.geofire.GeoLocation;
@@ -538,7 +536,7 @@ public class SettingActivity extends AppCompatActivity {
                     //
                     //    Toast.makeText(Map_Activity.this, "An unknown network error has occured", Toast.LENGTH_SHORT).show();
                 }
-                VolleyLog.d("Setting Activity", "Error: " + error.getMessage());
+                LogUtils.d("Setting Activity " + "Error: " + error.getMessage());
             }
         });
 
@@ -697,7 +695,7 @@ public class SettingActivity extends AppCompatActivity {
                             try {
                                 JSONObject strJsonCategory = response.getJSONObject(i);
                                 strCarCategory = strJsonCategory.optString("subject");
-                                Log.d("OUTPUT IS", strCarCategory);
+                                LogUtils.d("OUTPUT IS " + strCarCategory);
                                 subjectcategory[0] = "Select a subject";
                                 subjectcategory[i + 1] = strCarCategory;
                                 LogUtils.i("CATEGORY" + subjectcategory[i]);

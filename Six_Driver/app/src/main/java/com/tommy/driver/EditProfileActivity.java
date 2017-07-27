@@ -19,7 +19,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.text.InputFilter;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -87,10 +86,10 @@ import java.util.Map;
 @EActivity(R.layout.activity_edit_profile)
 public class EditProfileActivity extends AppCompatActivity implements CountryCodePicker.OnCountryChangeListener, Validator.ValidationListener {
 
-    Validator validator;
-    public String userID, firstName, lastName, nickName, email, mobileNumber, countryCode, referal_code, profileImage, profileImageNew = "null", status, message, driverUpdateURL, vehicleMake, vehicleModel, vehicleYear, vehicleMileage, vehiclenumberplate;
-    private static final int CAMERA_CAPTURE_IMAGE = 100;
     public static final int MEDIA_TYPE_IMAGE = 1;
+    private static final int CAMERA_CAPTURE_IMAGE = 100;
+    public String userID, firstName, lastName, nickName, email, mobileNumber, countryCode, referal_code, profileImage, profileImageNew = "null", status, message, driverUpdateURL, vehicleMake, vehicleModel, vehicleYear, vehicleMileage, vehiclenumberplate;
+    Validator validator;
     String picturePath, profImage, strSelectedCategory, strCarCategory, strCategory, selectedMap;
     DatabaseReference requestReference, tripReference, proofstatusref;
     ProgressDialog progressDialog;
@@ -101,82 +100,58 @@ public class EditProfileActivity extends AppCompatActivity implements CountryCod
     JSONObject strJsonCategory;
 
     Spinner spinCarCategory;
-
-    private Uri fileUri; // file url to store image/video
-
     @ViewById(R.id.profileImage)
     ImageView edtProfileImage;
-
     @ViewById(R.id.backButton)
     ImageButton backButton;
-
-
     @ViewById(R.id.save_button)
     Button saveButton;
-
     @NotEmpty(message = "Enter first name")
     @ViewById(R.id.edtFirstName)
     EditText inputFirstName;
-
     @NotEmpty(message = "Enter last name")
     @ViewById(R.id.edtLastName)
     EditText inputLastName;
-
     @NotEmpty(message = "Enter nick name")
     @ViewById(R.id.edtNick)
     EditText inputNickName;
-
     @NotEmpty(message = "Enter vehicle make")
     @ViewById(R.id.edit_vehiclemake)
     EditText inputVehiclemake;
-
     @NotEmpty(message = "Enter vehicle model")
     @ViewById(R.id.edit_vehiclemodel)
     EditText inputVehiclemodel;
-
     @NotEmpty(message = "Enter vehicle year")
     @ViewById(R.id.edit_vehicleyear)
     EditText inputVehicleyear;
-
     @NotEmpty(message = "Enter Vehicle License Plate Number")
     @ViewById(R.id.edit_vehiclenumberplate)
     EditText inputVehicleNumberplate;
-
     @NotEmpty(message = "Enter vehicle mileage")
     @ViewById(R.id.edit_vehiclemileage)
     EditText inputVehiclemileage;
-
-
     @NotEmpty
     @ViewById(R.id.edtCountryCode)
     TextView inputCountryCode;
-
     @NotEmpty
     @ViewById(R.id.edtMobile)
     EditText inputMobileNumber;
-
     @ViewById(R.id.Referral_code)
     TextView inputReferalcode;
-
     @ViewById(R.id.edtEmail)
     EditText inputEmail;
-
     @ViewById(R.id.navradioGroup)
     RadioGroup mapSelectorRadioGroup;
-
     @ViewById(R.id.googlemap)
     RadioButton googleMapRadioButton;
-
     @ViewById(R.id.wazemap)
     RadioButton wazeMapRadioButton;
-
     @ViewById(R.id.inappmap)
     RadioButton inappMapRadioButton;
-
     @ViewById(R.id.ccp)
     CountryCodePicker ccp;
     ArrayAdapter<String> adapteradapter;
-
+    private Uri fileUri; // file url to store image/video
 
     @AfterViews
     void settingsActivity() {
@@ -312,7 +287,7 @@ public class EditProfileActivity extends AppCompatActivity implements CountryCod
                             try {
                                 strJsonCategory = response.getJSONObject(i);
                                 strCarCategory = strJsonCategory.optString("categoryname");
-                                Log.d("OUTPUT IS", strCarCategory);
+                                LogUtils.d("OUTPUT IS " + strCarCategory);
                                 carcategory[0] = "Select car category";
                                 carcategory[i + 1] = strCarCategory;
                                 LogUtils.i("CATEGORY" + carcategory[i]);
@@ -810,61 +785,10 @@ public class EditProfileActivity extends AppCompatActivity implements CountryCod
         }
     }
 
-    private class ImageuploadTask extends AsyncTask<String, Void, Boolean> {
-        private ProgressDialog dialog;
-        private EditProfileActivity activity;
-
-        ImageuploadTask(EditProfileActivity activity) {
-            this.activity = activity;
-            context = activity;
-            dialog = new ProgressDialog(context);
-        }
-
-        private Context context;
-
-        protected void onPreExecute() {
-
-            dialog = new ProgressDialog(context);
-            dialog.setMessage("Uploading...");
-            dialog.setIndeterminate(false);
-            dialog.setCancelable(false);
-            dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            dialog.show();
-        }
-
-        @Override
-        protected void onPostExecute(final Boolean success) {
-
-            if (dialog != null && dialog.isShowing()) {
-                if (!activity.isFinishing() && !activity.isDestroyed()) {
-                    try {
-                        dialog.dismiss();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-
-        @Override
-        protected Boolean doInBackground(final String... args) {
-            try {
-                // ... processing ...
-                Upload_Server();
-                return true;
-            } catch (Exception e) {
-                Log.e("Schedule", "UpdateSchedule failed", e);
-                return false;
-            }
-        }
-    }
-
     protected void Upload_Server() {
         // TODO Auto-generated method stub
         LogUtils.i("After call progress");
         try {
-
-            Log.e("Image Upload", "Inside Upload");
 
             HttpURLConnection connection;
             DataOutputStream outputStream;
@@ -941,10 +865,10 @@ public class EditProfileActivity extends AppCompatActivity implements CountryCod
             String Str1_imageurl = "";
 
             while ((str = inputStream1.readLine()) != null) {
-                Log.e("Debug", "Server Response " + str);
+                LogUtils.e("Debug " + "Server Response " + str);
 
                 Str1_imageurl = str;
-                Log.e("Debug", "Server Response String imageurl" + str);
+                LogUtils.e("Debug " + "Server Response String imageurl" + str);
             }
             inputStream1.close();
             LogUtils.i("image url" + Str1_imageurl);
@@ -1026,7 +950,6 @@ public class EditProfileActivity extends AppCompatActivity implements CountryCod
         }
     }
 
-
     public void insertFireBaseDriverLocationData() {
 
         if (userID != null && !userID.isEmpty()) {
@@ -1055,7 +978,6 @@ public class EditProfileActivity extends AppCompatActivity implements CountryCod
             });
         }
     }
-
 
     public void getProofStatus() {
         LogUtils.i("Driver Id In Proof" + userID);
@@ -1153,5 +1075,53 @@ public class EditProfileActivity extends AppCompatActivity implements CountryCod
         LogUtils.i("File Path1:" + filePath);
         cursor.close();
         return filePath;
+    }
+
+    private class ImageuploadTask extends AsyncTask<String, Void, Boolean> {
+        private ProgressDialog dialog;
+        private EditProfileActivity activity;
+        private Context context;
+
+        ImageuploadTask(EditProfileActivity activity) {
+            this.activity = activity;
+            context = activity;
+            dialog = new ProgressDialog(context);
+        }
+
+        protected void onPreExecute() {
+
+            dialog = new ProgressDialog(context);
+            dialog.setMessage("Uploading...");
+            dialog.setIndeterminate(false);
+            dialog.setCancelable(false);
+            dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            dialog.show();
+        }
+
+        @Override
+        protected void onPostExecute(final Boolean success) {
+
+            if (dialog != null && dialog.isShowing()) {
+                if (!activity.isFinishing() && !activity.isDestroyed()) {
+                    try {
+                        dialog.dismiss();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+
+        @Override
+        protected Boolean doInBackground(final String... args) {
+            try {
+                // ... processing ...
+                Upload_Server();
+                return true;
+            } catch (Exception e) {
+                LogUtils.e("Schedule " + "UpdateSchedule failed " + e);
+                return false;
+            }
+        }
     }
 }

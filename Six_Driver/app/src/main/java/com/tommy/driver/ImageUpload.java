@@ -16,7 +16,6 @@ import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -50,8 +49,8 @@ import java.net.URL;
 @EActivity(R.layout.activity_image_upload)
 public class ImageUpload extends MyBaseActivity {
 
-    Uri mCapturedImageURI;
     private static final int CAMERA_REQUEST = 1;
+    Uri mCapturedImageURI;
     String picturePath, profImage;
 
     @ViewById(R.id.txtArcane)
@@ -364,56 +363,6 @@ public class ImageUpload extends MyBaseActivity {
         }
     }
 
-
-    private class ImageuploadTask extends AsyncTask<String, Void, Boolean> {
-        private ProgressDialog dialog;
-        private ImageUpload activity;
-
-        ImageuploadTask(ImageUpload activity) {
-            this.activity = activity;
-            context = activity;
-            dialog = new ProgressDialog(context);
-        }
-
-        private Context context;
-
-        protected void onPreExecute() {
-            dialog = new ProgressDialog(context);
-            dialog.setMessage("Uploading...");
-            dialog.setIndeterminate(false);
-            dialog.setCancelable(false);
-            dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            if (!isFinishing()) {
-                dialog.show();
-            }
-        }
-
-        @Override
-        protected void onPostExecute(final Boolean success) {
-            if (dialog != null && dialog.isShowing()) {
-                if (!activity.isFinishing() && !activity.isDestroyed()) {
-                    try {
-                        dialog.dismiss();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-
-        @Override
-        protected Boolean doInBackground(final String... args) {
-            try {
-                // ... processing ...
-                Upload_Server();
-                return true;
-            } catch (Exception e) {
-                Log.e("Schedule", "UpdateSchedule failed", e);
-                return false;
-            }
-        }
-    }
-
     protected void Upload_Server() {
         LogUtils.i("After call progress");
         HttpURLConnection connection = null;
@@ -421,8 +370,6 @@ public class ImageUpload extends MyBaseActivity {
         FileInputStream fileInputStream = null;
         DataInputStream inputStream1 = null;
         try {
-
-            Log.e("Image Upload", "Inside Upload");
 
             String pathToOurFile = picturePath;
             //	  String pathToOurFile1 = imagepathcam;
@@ -490,10 +437,10 @@ public class ImageUpload extends MyBaseActivity {
             String Str1_imageurl = "";
 
             while ((str = inputStream1.readLine()) != null) {
-                Log.e("Debug", "Server Response " + str);
+                LogUtils.e("Debug " + "Server Response " + str);
 
                 Str1_imageurl = str;
-                Log.e("Debug", "Server Response String imageurl" + str);
+                LogUtils.e("Debug " + "Server Response String imageurl" + str);
             }
             LogUtils.i("image url" + Str1_imageurl);
 
@@ -591,5 +538,53 @@ public class ImageUpload extends MyBaseActivity {
         LogUtils.i("File Path1:" + filePath);
         cursor.close();
         return filePath;
+    }
+
+    private class ImageuploadTask extends AsyncTask<String, Void, Boolean> {
+        private ProgressDialog dialog;
+        private ImageUpload activity;
+        private Context context;
+
+        ImageuploadTask(ImageUpload activity) {
+            this.activity = activity;
+            context = activity;
+            dialog = new ProgressDialog(context);
+        }
+
+        protected void onPreExecute() {
+            dialog = new ProgressDialog(context);
+            dialog.setMessage("Uploading...");
+            dialog.setIndeterminate(false);
+            dialog.setCancelable(false);
+            dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            if (!isFinishing()) {
+                dialog.show();
+            }
+        }
+
+        @Override
+        protected void onPostExecute(final Boolean success) {
+            if (dialog != null && dialog.isShowing()) {
+                if (!activity.isFinishing() && !activity.isDestroyed()) {
+                    try {
+                        dialog.dismiss();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+
+        @Override
+        protected Boolean doInBackground(final String... args) {
+            try {
+                // ... processing ...
+                Upload_Server();
+                return true;
+            } catch (Exception e) {
+                LogUtils.e("Schedule " + "UpdateSchedule failed - " + e);
+                return false;
+            }
+        }
     }
 }

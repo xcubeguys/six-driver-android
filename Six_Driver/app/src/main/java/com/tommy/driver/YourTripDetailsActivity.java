@@ -8,7 +8,6 @@ import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
@@ -28,7 +27,6 @@ import com.android.volley.NoConnectionError;
 import com.android.volley.Response;
 import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
-import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -176,6 +174,18 @@ public class YourTripDetailsActivity extends AppCompatActivity implements Direct
 
     @ViewById(R.id.backButton)
     ImageButton back;
+
+    static String formatDate(long dateInMillis) {
+        Date date = new Date(dateInMillis);
+        return DateFormat.getDateInstance(DateFormat.FULL).format(date);
+    }
+
+    public static String getCurrentTimeStamp() {
+        SimpleDateFormat formDate = new SimpleDateFormat("dd-MM-yyyy");
+
+        // String strDate = formDate.format(System.currentTimeMillis()); // option 1
+        return formDate.format(new Date()); // option 2
+    }
 
     @AfterViews
     void yourTripDetails() {
@@ -499,11 +509,6 @@ public class YourTripDetailsActivity extends AppCompatActivity implements Direct
         progressDialog.show();
     }
 
-    static String formatDate(long dateInMillis) {
-        Date date = new Date(dateInMillis);
-        return DateFormat.getDateInstance(DateFormat.FULL).format(date);
-    }
-
     public void dismissDialog() {
         if (progressDialog != null && progressDialog.isShowing()) {
             if (!isFinishing()) {
@@ -630,7 +635,7 @@ public class YourTripDetailsActivity extends AppCompatActivity implements Direct
                     //
                     //    Toast.makeText(Map_Activity.this, "An unknown network error has occured", Toast.LENGTH_SHORT).show();
                 }
-                VolleyLog.d("Error", "EarningActivity: " + error.getMessage());
+                LogUtils.d("EarningActivity: " + error.getMessage());
             }
         });
 
@@ -691,7 +696,7 @@ public class YourTripDetailsActivity extends AppCompatActivity implements Direct
             timeInSeconds = timeInSeconds - (min * 60);
             sec = timeInSeconds;
             hours = (hours < 0 ? -hours : hours);
-            Log.i("======= Hours", " :: " + hours + min + sec);
+            LogUtils.i("====== Hours :: " + hours + min + sec);
         } catch (ParseException e) {
             e.printStackTrace();
         }
@@ -701,7 +706,6 @@ public class YourTripDetailsActivity extends AppCompatActivity implements Direct
         else
             return String.valueOf(hours) + " hr" + " " + String.valueOf(min) + " min";
     }
-
 
     public void PlaceType(String latlng) {
 
@@ -775,20 +779,13 @@ public class YourTripDetailsActivity extends AppCompatActivity implements Direct
 
                     Toast.makeText(YourTripDetailsActivity.this, "No Internet Connection", Toast.LENGTH_SHORT).show();
                 }
-                VolleyLog.d("Error: " + error.getMessage());
+                LogUtils.d("Error: " + error.getMessage());
             }
         });
 
         // Adding request to request queue
         movieReq.setRetryPolicy(new DefaultRetryPolicy(20 * 1000, 1, 1.0f));
         AppController.getInstance().addToRequestQueue(movieReq);
-    }
-
-    public static String getCurrentTimeStamp() {
-        SimpleDateFormat formDate = new SimpleDateFormat("dd-MM-yyyy");
-
-        // String strDate = formDate.format(System.currentTimeMillis()); // option 1
-        return formDate.format(new Date()); // option 2
     }
 
     boolean isDouble(String str) {
