@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest package="com.tommy.driver"
-          xmlns:android="http://schemas.android.com/apk/res/android"
-          xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.tommy.driver">
 
     <uses-permission android:name="android.permission.CALL_PHONE"/>
     <uses-permission android:name="android.permission.INTERNET"/>
@@ -25,8 +25,8 @@
     <uses-permission android:name="android.permission.SEND_SMS"/>
     <uses-permission android:name="android.permission.WRITE_SMS"/>
     <uses-permission android:name="android.permission.READ_SMS"/>
-    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
-                     xmlns:tools="http://schemas.android.com/tools"
+    <uses-permission xmlns:tools="http://schemas.android.com/tools"
+        android:name="android.permission.PACKAGE_USAGE_STATS"
                      tools:ignore="ProtectedPermissions"/>
     <uses-permission android:name="android.permission.GET_TASKS"/>
 
@@ -193,9 +193,14 @@
             android:screenOrientation="portrait"
             android:theme="@style/MyMaterialTheme"/>
 
+        <!--Code from exiting code provided by client-->
+        <!--<meta-data
+            android:name="io.fabric.ApiKey"
+            android:value="58ed39c94fbcd33ec9afa9b3b5b81a533b1c320a"/>-->
+
         <meta-data
             android:name="io.fabric.ApiKey"
-            android:value="58ed39c94fbcd33ec9afa9b3b5b81a533b1c320a"/>
+            android:value="9bfe4e6e632db702904a40db4f4186cd3e7025b0" />
 
         <activity
             android:name=".ShareReferralActivity"
