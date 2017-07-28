@@ -187,7 +187,6 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 import static com.google.maps.android.PolyUtil.isLocationOnPath;
 
-
 public class Map_Activity extends AppCompatActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, LocationSource,
         GoogleApiClient.OnConnectionFailedListener, LocationListener, GeoQueryEventListener, ValueEventListener, DirectionCallback, View.OnClickListener, android.location.LocationListener {
 
@@ -868,6 +867,7 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onClick(View v) {
 
+                LogUtils.i("---- begin from onclick");
                 strDistanceBegin = "distancebegin";
                 distance = 0;
 
@@ -922,6 +922,7 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
 
                 tripState = "btnendClicked";
 
+                clearSavedDistanceCalculated();
                 strDistanceBegin = "totaldistancend";
                 tripStatus = "end";
 
@@ -2035,6 +2036,7 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
             getState.apply();
 
             tripState = "btnendClicked";
+            clearSavedDistanceCalculated();
             strDistanceBegin = "totaldistancend";
             tripStatus = "end";
             //gettripID();
@@ -3306,6 +3308,7 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
 
         mCurrentLocation = location;
 
+        LogUtils.i("---- begin from strDistanceBegin = " + strDistanceBegin);
         if (strDistanceBegin != null) {
 
             if (strDistanceBegin.matches("distancebegin")) {
@@ -3317,6 +3320,10 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
 
                 //Calling the method below updates the  live values of distance and speed to the TextViews.
                 updateUI();
+
+                //Saving required data for distance restoring after application crash or unknowingly close
+                saveDistanceCalculated();
+
                 //calculating the speed with getSpeed method it returns speed in m/s so we are converting it into kmph
                 speed = location.getSpeed() * 18 / 5;
                 //Toast.makeText(Map_Activity.this, "trip started!!", Toast.LENGTH_SHORT).show();
@@ -3510,6 +3517,29 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
                 strTotalDistance = String.valueOf(distance);
             }
         }
+    }
+
+    private void saveDistanceCalculated() {
+        editor.putString("calculated_distance_doubleStr", "" + distance);
+        editor.putString("calculated_distance_lStart_lat", "" + lStart.getLatitude());
+        editor.putString("calculated_distance_lStart_lon", "" + lStart.getLongitude());
+        editor.apply();
+    }
+
+    private void restoreSavedDistanceCalculated() {
+        distance = Double.parseDouble(prefs.getString("calculated_distance_doubleStr", "0"));
+        double lat = Double.parseDouble(prefs.getString("calculated_distance_lStart_lat", "0"));
+        double lon = Double.parseDouble(prefs.getString("calculated_distance_lStart_lon", "0"));
+        lStart = new Location("");
+        lStart.setLatitude(lat);
+        lStart.setLongitude(lon);
+    }
+
+    private void clearSavedDistanceCalculated() {
+        editor.remove("calculated_distance_doubleStr");
+        editor.remove("calculated_distance_lStart_lat");
+        editor.remove("calculated_distance_lStart_lon");
+        editor.apply();
     }
 
     @Override
@@ -4584,8 +4614,10 @@ public class Map_Activity extends AppCompatActivity implements OnMapReadyCallbac
         strsetValue = "coming_start";
         startUpdateTrip();
         enableDisableVoiceNavButt();
+        LogUtils.i("---- begin from getOnTripState");
         strDistanceBegin = "distancebegin";
         distance = 0;
+        restoreSavedDistanceCalculated();
     }
 
     public void removeRatingListener() {
